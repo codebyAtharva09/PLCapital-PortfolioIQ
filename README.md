@@ -22,7 +22,7 @@ same backend.
 - [Gemini API configuration](#gemini-api-configuration)
 - [Demonstration workflow](#demonstration-workflow)
 - [What it does](#what-it-does)
-- [Architecture](#architecture)
+- [Architecture & Overview](#architecture--overview)
 - [Financial methodology](#financial-methodology)
 - [Security design](#security-design)
 - [Evaluation results](#evaluation-results)
@@ -135,22 +135,24 @@ records, so nothing is claimed about it), `VERIFICATION_FAILED` (a check failed;
 `VERIFICATION_UNAVAILABLE` (nothing to verify, for example a refusal).
 Correctness against a reference answer is judged separately by the evaluators.
 
-## Architecture
+## Architecture & Overview
 
-```mermaid
-flowchart LR
-    Q[Question] --> V[Input validation] --> R[Router: one Gemini request, validated RouterDecision]
-    R -->|sql| S[SQL tool: semantic layer + Gemini draft] --> G[SQLGlot guard] --> DB[(Read-only SQLite + authorizer)]
-    R -->|exposure| P[Resolver B4, B5, SR1] --> E[Exposure engine, Methods A and B] --> DB
-    R -->|exposure_for_sql_results| S
-    S -->|portfolio names| P
-    R -->|clarify / decline| F
-    E --> F[Financial Answer Receipt: answer composed by code]
-    S --> F
-    F --> C[CLI]
-    F --> U[Streamlit]
-    F --> EV[Evaluators]
-```
+PortfolioIQ separates what the model may decide from what code must do. Gemini chooses a route and drafts SQL. Python validates the
+query, runs it read-only, performs the calculations, checks the result and writes the answer. Gemini never receives query results.
+
+![PortfolioIQ architecture: from the interface through routing, guarded SQL and exposure calculation to verification and the Financial Answer Receipt](docs/assets/architecture_overview.png)
+
+Following one question through the diagram:
+
+| Stage | What happens | Gemini? |
+|---|---|---|
+| **1. Interface** | The CLI, the Streamlit app and the evaluators call the same agent. Exposure Analysis and the data checks read the database directly | No |
+| **2. Agent and router** | The agent validates the input. One request returns a validated decision: `sql`, `exposure`, `exposure_for_sql_results`, `clarify` or `decline`. The decision has no numeric field, so no figure can travel from the model into an answer | Yes, routing |
+| **3. SQL path** | Gemini drafts one `SELECT` from a semantic description of the schema. The SQLGlot guard checks that exact text, then SQLite runs it read-only under an authorizer and time, step, row and size limits | Yes, the draft and at most one repair |
+| **4. Exposure path** | The resolver matches the portfolio by fixed rules. The engine calculates Methods A and B on two independent paths and requires them to agree within 1e-9 | No |
+| **5. Hybrid path** | `exposure_for_sql_results`: SQL finds the portfolios, and the exposure engine runs for each name returned | SQL draft only |
+| **6. Clarify, decline or failure** | No tool runs for a clarification or a decline. A quota or API failure becomes a typed error, and no answer is invented. Demo mode replays exact recorded responses and sends nothing | Routing only |
+| **7. Verification and answer** | Result checks run first, then figures are rebuilt in Python from source records where the data allows it. Code writes the answer, and the receipt records the route, SQL, figures, checks, verification state and versions | No |
 
 - **Runtime package** `src/portfolioiq/`: `agent.py`, `router.py`, `sql_tool.py`, `sql_guard.py`,
   `sql_engine.py`, `semantic.py`, `dates.py`, `exposure.py`, `resolver.py`, `invariants.py`,
