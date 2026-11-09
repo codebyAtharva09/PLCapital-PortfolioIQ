@@ -149,7 +149,7 @@ def test_server_error_is_retried_once():
     llm, client, clock = make([server_error(503), response()])
     result = ask(llm)
     assert result.call.attempts == 2 and len(client.calls) == 2
-    assert len(clock.sleeps) == 1 and 5.0 <= clock.sleeps[0] <= 6.0 and result.call.wait_ms == clock.sleeps[0] * 1000  # base wait plus up to 1 s of jitter
+    assert len(clock.sleeps) == 1 and 5.0 <= clock.sleeps[0] <= 6.0 and result.call.wait_ms == pytest.approx(clock.sleeps[0] * 1000, abs=0.01)  # base wait plus up to 1 s of jitter
 
 
 def test_server_errors_are_not_retried_repeatedly():
