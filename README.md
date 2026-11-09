@@ -18,6 +18,7 @@ same backend.
 
 ## Contents
 
+- [Assignment coverage](#assignment-coverage)
 - [Quick start](#quick-start)
 - [Gemini API configuration](#gemini-api-configuration)
 - [Demonstration workflow](#demonstration-workflow)
@@ -29,6 +30,19 @@ same backend.
 - [Known limitations](#known-limitations)
 - [Command reference](#command-reference)
 - [Repository layout and documents](#repository-layout-and-documents)
+
+## Assignment coverage
+
+| Requirement | Implementation | Files |
+|---|---|---|
+| SQL Query Tool | Natural language to one validated, read-only `SELECT` | `src/portfolioiq/sql_tool.py`, `sql_guard.py`, `sql_engine.py`, `semantic.py` |
+| Exposure Calculator | Sector weights by two labelled methods, bonds excluded, computed twice and reconciled | `src/portfolioiq/exposure.py` |
+| Portfolio Agent (CLI) | Routes each question to a tool, or asks for clarification, or declines | `src/portfolioiq/agent.py`, `router.py`, `cli.py` |
+| Evaluator | Executed-result comparison against the supplied ground truth | `src/portfolioiq_eval/comparator.py`, `official.py`, `sql_eval.py` |
+| Documentation and error handling | This README, typed errors for quota, outage, invalid output and invalid SQL | `docs/`, `src/portfolioiq/llm.py` |
+| Optional UI | Streamlit application with seven pages | `app/` |
+
+**Technology.** Python 3.12 or later, SQLite, Google Gemini (`google-genai`), SQLGlot, Pydantic, Streamlit, pandas, pytest.
 
 ## Quick start
 
@@ -257,6 +271,14 @@ python -m portfolioiq_eval official --rescore --runs-dir reports/sprint_v2_3/can
 python -m portfolioiq_eval benchmark                                          # 19 reliability scenarios
 python -m portfolioiq integrity                                               # 22 data checks
 ```
+
+### Test results
+
+The offline suite passed **910 tests, 0 failed** on this commit, run on 9 November 2026 with Python 3.13 on Windows. Run it with `pytest`; it needs no key and no network.
+
+It covers SQL safety, exposure and financial calculations, routing, the CLI, the Streamlit pages, receipts, replay and the evaluators, using fakes in place of Gemini. A passing suite shows the code behaves as its tests expect. It does not show that a live model answers correctly or that the calculations are right for questions no test asks. Only the Gemini evaluation results above needed live access.
+
+GitHub Actions runs the offline suite on Linux and Windows with Python 3.12, and makes no Gemini request.
 
 **Supplemental evaluation, `gemini-3.5-flash-lite` (not the official model).** Approved separately to
 reach the cases the official model's quota could not cover; kept in its own folder
