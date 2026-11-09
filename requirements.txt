@@ -1,0 +1,18 @@
+# Pinned versions, tested with Python 3.13 on Windows (python -m pip install -r requirements.txt).
+# google-genai is pinned below 3.0.0: 3.0.0 (released 2026-11-06) is a new major
+# version and Google's own PyPI page advises pinning "< 3.0.0".
+google-genai==2.34.0
+pydantic==2.14.3
+python-dotenv==1.2.4
+pytest==9.2.0
+sqlglot==30.30.0
+# The Streamlit app (M6).
+streamlit==1.67.0
+# Imported directly by the code (llm.py, the app), so declared and pinned here to the tested versions even though
+# google-genai and streamlit also install them. Pinning them keeps a fresh install identical to the tested one.
+httpx==0.28.1
+pandas==3.1.1
+altair==6.3.0
+
+# Installs this project (src/portfolioiq and src/portfolioiq_eval) in editable mode.
+-e .

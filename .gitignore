@@ -1,0 +1,37 @@
+# Secrets: real keys live only in .env (or the OS environment). Only the template is tracked.
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+
+# Generated databases and caches
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+.cache/
+
+# Local tools and editors
+.vscode/
+.idea/
+.claude/
+.codex/
+*.code-workspace
+
+# Temporary and OS files
+*.tmp
+*.temp
+*.bak
+*.log
+.DS_Store

@@ -1,0 +1,53 @@
+# PortfolioIQ institutional theme (docs/DESIGN_SYSTEM.md). Only the light theme is designed and validated.
+
+[server]
+enableStaticServing = true  # serves the self-hosted IBM Plex fonts from app/static/fonts
+headless = true
+address = "localhost"  # local demo: not reachable from other machines unless this is changed deliberately
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "light"
+primaryColor = "#1F5FBF"
+backgroundColor = "#F6F7F9"
+secondaryBackgroundColor = "#EEF1F5"
+textColor = "#14202E"
+linkColor = "#174A96"
+borderColor = "#D9DEE6"
+showWidgetBorder = true
+baseRadius = "4px"
+buttonRadius = "4px"
+font = "IBM Plex Sans, system-ui, sans-serif"
+headingFont = "IBM Plex Sans, system-ui, sans-serif"
+codeFont = "IBM Plex Mono, ui-monospace, monospace"
+codeBackgroundColor = "#EEF1F5"
+dataframeHeaderBackgroundColor = "#EEF1F5"
+dataframeHeaderTextColor = "#14202E"
+dataframeBorderColor = "#E7EBF0"
+chartCategoricalColors = ["#1F5FBF", "#C2702A"]
+greenTextColor = "#1B7A44"
+orangeTextColor = "#8A5A00"
+redTextColor = "#B3261E"
+
+[theme.sidebar]
+backgroundColor = "#0F1E33"
+secondaryBackgroundColor = "#1A2C47"
+textColor = "#E8EDF5"
+linkColor = "#E8EDF5"
+primaryColor = "#7FB0F5"
+borderColor = "#2B3F5E"
+
+[[theme.fontFaces]]
+family = "IBM Plex Sans"
+url = "app/static/fonts/IBMPlexSans-Variable-latin.woff2"
+weight = "100 700"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/fonts/IBMPlexMono-Regular-latin.woff2"
+weight = 400

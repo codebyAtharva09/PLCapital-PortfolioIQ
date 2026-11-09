@@ -1,0 +1,5 @@
+# The supplied data must stay byte-identical (checked against data/SHA256SUMS),
+# so git must never convert its line endings.
+data/** -text
+evaluation/ground_truth_dataset.json -text
+evaluation/sql_shape_set.json -text
