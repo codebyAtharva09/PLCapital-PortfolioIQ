@@ -253,7 +253,22 @@ def test_a_filter_on_a_different_portfolio_from_the_question_fails(verify):
 
 
 def test_counts_over_unsupported_tables_stay_unverifiable(verify):
-    assert verify("SELECT COUNT(*) FROM transactions", "How many transactions are there?").status is V.NOT_INDEPENDENTLY_VERIFIABLE
+    sql = "SELECT COUNT(*) FROM transactions t JOIN securities s ON s.security_id = t.security_id"
+    assert verify(sql, "How many transactions are there?").status is V.NOT_INDEPENDENTLY_VERIFIABLE
+
+
+@pytest.mark.parametrize("sql, question", [
+    ("SELECT COUNT(*) FROM transactions WHERE transaction_type = 'BUY' AND transaction_date BETWEEN '2023-10-03' AND '2023-10-09'", "How many BUY transactions were made in the past 7 days?"),
+    ("SELECT AVG(current_price) FROM securities", "What is the average current price?"),
+    ("SELECT sec.sector_name, AVG(s.current_price) AS a FROM securities s JOIN sectors sec ON sec.sector_id = s.sector_id GROUP BY sec.sector_name", "Average price per sector?"),
+    ("SELECT MAX(current_price) FROM securities", "Highest current price?"),
+    ("SELECT MIN(beta) FROM risk_metrics", "Lowest beta recorded?"),
+], ids=range(5))
+def test_averages_extremes_and_single_table_counts_reconcile_and_a_tampered_value_fails(readonly_db, schema, source, sql, question):
+    result = execute_sql(readonly_db, sql)
+    assert verify_sql_result(sql, result.columns, result.rows, schema, source, question=question).status is V.INDEPENDENTLY_RECONCILED
+    rows = [[*row[:-1], row[-1] + 1] for row in map(list, result.rows)]
+    assert verify_sql_result(sql, result.columns, rows, schema, source, question=question).status is V.VERIFICATION_FAILED
 
 
 def test_a_tampered_count_fails(readonly_db, schema, source):

@@ -174,9 +174,9 @@ def test_stored_values_only_are_result_validated_not_reconciled(verify, sql):
 
 
 @pytest.mark.parametrize("sql", [
-    "SELECT COUNT(*) FROM transactions",
-    "SELECT AVG(current_price) FROM securities",
-    "SELECT t.portfolio_id, COUNT(DISTINCT t.security_id) * 1.0 / COUNT(*) AS r FROM transactions t GROUP BY t.portfolio_id",
+    "SELECT COUNT(*) FROM transactions t JOIN securities s ON s.security_id = t.security_id",
+    "SELECT AVG(current_price * 2) FROM securities",
+    "SELECT t.portfolio_id, COUNT(DISTINCT s.sector_id) * 1.0 / COUNT(*) AS r FROM transactions t JOIN securities s ON s.security_id = t.security_id GROUP BY t.portfolio_id",
     "SELECT SUM(t.quantity * t.price) FROM transactions t",
     f"SELECT SUM({MV}) {JOIN} WHERE p.portfolio_id IN (SELECT portfolio_id FROM risk_metrics)",
     f"SELECT SUM({MV}) / 1000 AS k {JOIN}",

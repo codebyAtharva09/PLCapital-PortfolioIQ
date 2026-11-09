@@ -22,7 +22,7 @@ import math
 import sqlite3
 from collections import defaultdict
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import sqlglot
@@ -37,7 +37,9 @@ from portfolioiq.verification import VerificationStatus
 MATCH_RELATIVE = 1e-9
 MATCH_ABSOLUTE = 0.005  # the evaluation comparator's numeric tolerance
 _KIND_LABEL = {"market_value": "market value (quantity x current price)", "cost_basis": "cost basis", "aum": "stated AUM", "weight": "stated weight",
-               "count": "count of records", "count_distinct": "count of distinct values"}
+               "count": "count of records", "count_distinct": "count of distinct values", "avg": "average of stored values", "min": "minimum of stored values",
+               "max": "maximum of stored values", "sum": "sum of stored values"}
+_SINGLE_TABLE_POOLS = ("transactions", "historical_prices", "portfolio_performance", "risk_metrics")
 
 
 class VerifiedFigure(BaseModel):
@@ -76,6 +78,7 @@ class SourceRecords:
     portfolios: tuple[dict[str, Any], ...]
     securities: tuple[dict[str, Any], ...] = ()  # joined to their sector
     problems: tuple[str, ...] = ()  # why the records themselves cannot be relied on
+    other_tables: dict[str, tuple[dict[str, Any], ...]] = field(default_factory=dict)  # tables with no join behind them
 
     @classmethod
     def load(cls, conn: sqlite3.Connection) -> SourceRecords:
@@ -105,7 +108,8 @@ class SourceRecords:
             sector = sector_by_id.get(security["securities.sector_id"], empty_sector)
             holdings.append({**holding, **security, **sector, **portfolio})
         joined = tuple({**s, **sector_by_id.get(s["securities.sector_id"], empty_sector)} for s in securities)
-        return cls(tuple(holdings), tuple(portfolios), joined, tuple(problems))
+        return cls(tuple(holdings), tuple(portfolios), joined, tuple(problems), 
+                   {name: tuple({**row, **portfolio_by_id.get(row.get(f"{name}.portfolio_id"), {})} for row in table(name)) for name in _SINGLE_TABLE_POOLS})
 
 
 @dataclass(frozen=True)
@@ -123,6 +127,11 @@ class _Recipe:
 
     def combine(self, records: Sequence[dict[str, Any]]) -> float | None:
         """The figure for these records; None when there is nothing to compute it from."""
+        if self.kind in ("avg", "min", "max", "sum"):
+            present = [float(r[self.column]) for r in records if r.get(self.column) is not None]
+            if not present:
+                return None
+            return {"avg": math.fsum(present) / len(present), "min": min(present), "max": max(present), "sum": math.fsum(present)}[self.kind]
         if self.kind == "count":
             return float(sum(1 for r in records if self.column is None or r.get(self.column) is not None))
         if self.kind == "count_distinct":
@@ -272,7 +281,7 @@ def _check_ratio(index: int, output: OutputColumn, division: exp.Div, scope: _Sc
 def _recipe(measure: Measure, tables: frozenset[str] | None) -> _Recipe | str:
     """How to rebuild a measure, or the reason it cannot be rebuilt."""
     node = _strip(sqlglot.parse_one(measure.value, read="sqlite"))
-    aggregated = isinstance(node, (exp.Sum, exp.Count))
+    aggregated = isinstance(node, (exp.Sum, exp.Count, exp.Avg, exp.Min, exp.Max))
     inner = _strip(node.this) if aggregated else node
     kind, column, pool = None, None, "holdings"
     if isinstance(node, exp.Count):
@@ -298,6 +307,8 @@ def _recipe(measure: Measure, tables: frozenset[str] | None) -> _Recipe | str:
         kind = "aum"
     elif aggregated and _name(inner) == "holdings.current_weight":
         kind = "weight"
+    elif aggregated and _name(inner) and _count_pool(tables):
+        kind, column, pool = {exp.Avg: "avg", exp.Min: "min", exp.Max: "max", exp.Sum: "sum"}[type(node)], _name(inner), _count_pool(tables)
     if kind is None:
         return f"{measure.value} is not a supported financial calculation"
     predicates, selects_rows = [], False
@@ -331,6 +342,9 @@ def _count_pool(tables: frozenset[str] | None) -> str | None:
         return "portfolios"
     if tables <= {"securities", "sectors"} and "securities" in tables:
         return "securities"
+    other = tables - {"portfolios"}  # a many-to-one join to the portfolio; each row keeps its count
+    if len(other) == 1 and next(iter(other)) in _SINGLE_TABLE_POOLS:
+        return next(iter(other))
     return None
 
 
@@ -372,6 +386,9 @@ def _predicate(condition: exp.Expression) -> Callable[[dict[str, Any]], bool] | 
     if type(condition) in compare and _name(_strip(condition.left)) and _is_value(condition.right):
         column, wanted, test = _name(_strip(condition.left)), _value(condition.right), compare[type(condition)]
         return lambda record: record.get(column) is not None and test(record[column], wanted)
+    if isinstance(condition, exp.Between) and _name(_strip(condition.this)) and _is_value(condition.args["low"]) and _is_value(condition.args["high"]):
+        column, low, high = _name(_strip(condition.this)), _value(condition.args["low"]), _value(condition.args["high"])
+        return lambda record: record.get(column) is not None and low <= record[column] <= high
     if isinstance(condition, exp.In) and _name(_strip(condition.this)) and condition.expressions and all(_is_value(v) for v in condition.expressions):
         column, wanted = _name(_strip(condition.this)), {_value(v) for v in condition.expressions}
         return lambda record: record.get(column) in wanted
@@ -402,7 +419,7 @@ def _keys_available(recipe: _Recipe, key_columns, source: SourceRecords) -> str 
 
 
 def _pool(recipe: _Recipe, source: SourceRecords) -> Sequence[dict[str, Any]]:
-    return {"holdings": source.holdings, "portfolios": source.portfolios, "securities": source.securities}[recipe.pool]
+    return {"holdings": source.holdings, "portfolios": source.portfolios, "securities": source.securities, **source.other_tables}[recipe.pool]
 
 
 def _expected(recipe: _Recipe, key_columns, row: Sequence[Any], source: SourceRecords) -> float | None:

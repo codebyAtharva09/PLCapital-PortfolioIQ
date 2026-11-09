@@ -1,0 +1,322 @@
+{
+ "source": "reference built with pandas from data/*.csv; recorded SQL answers from reports/sprint_v2_3/candidate/runs",
+ "counts": {
+  "INDEPENDENTLY_RECONCILED": 29,
+  "RESULT_VALIDATED": 6,
+  "NOT_INDEPENDENTLY_VERIFIABLE": 4
+ },
+ "inventory": [
+  {
+   "metric": "Q1: How many portfolios do we have in total?",
+   "production_calculation": "SELECT COUNT(*) AS total_portfolios FROM portfolios;",
+   "independent_reference_calculation": "Row count of portfolios.csv.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Q2: What are the names of all active portfolios?",
+   "production_calculation": "SELECT portfolio_name FROM portfolios WHERE status = 'Active';",
+   "independent_reference_calculation": "Filter status == Active.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "RESULT_VALIDATED"
+  },
+  {
+   "metric": "Q3: Which securities are in the Technology sector?",
+   "production_calculation": "SELECT s.symbol, s.company_name FROM securities AS s JOIN sectors AS sec ON sec.sector_id = s.sector_id WHERE sec.sector_name = 'Technology';",
+   "independent_reference_calculation": "Securities joined to sectors, filter Technology.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "RESULT_VALIDATED"
+  },
+  {
+   "metric": "Q4: What is the total Assets Under Management (AUM) for portfolios with high target risk level?",
+   "production_calculation": "SELECT SUM(total_aum) AS total_aum FROM portfolios WHERE target_risk_level = 'High';",
+   "independent_reference_calculation": "Sum of stated total_aum where risk is High.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Q5: Show me the top 5 holdings by cost basis in the Growth Equity Fund",
+   "production_calculation": "SELECT h.holding_id, s.symbol, s.company_name, h.quantity, h.cost_basis FROM holdings h JOIN securities s ON s.security_id = h.security_id JOIN portfolios p ON p.portfolio_id = h.portfolio_id WHERE p.portfolio_name = 'Growth Equity Fund' ORDER BY h.cost_basis DESC LIMIT 5;",
+   "independent_reference_calculation": "Growth Equity Fund holdings sorted by cost_basis, first five.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Q6: What is the average current price of securities in each sector?",
+   "production_calculation": "SELECT sec.sector_name, AVG(s.current_price) AS average_current_price FROM securities s JOIN sectors sec ON sec.sector_id = s.sector_id GROUP BY sec.sector_id, sec.sector_name ORDER BY average_current_price DESC",
+   "independent_reference_calculation": "Mean of current_price per sector, stocks with a sector only.",
+   "difference": 5.684341886080802e-14,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Q7: For each portfolio, show the total value of Technology sector holdings and what percentage it represents of the total portfolio value",
+   "production_calculation": "WITH tech_part AS (SELECT h.portfolio_id, SUM(h.quantity * s.current_price) AS tech_market_value FROM holdings h JOIN securities s ON s.security_id = h.security_id JOIN sectors sec ON sec.sector_id = s.sector_id WHERE sec.sector_name = 'Technology' GROUP BY h.portfolio_id), total_portfolio AS (SELECT h.portfolio_id, SUM(h.quantity * s.current_price) AS total_market_value FROM holdings h JOIN securities s ON s.security_id = h.security_id GROUP BY h.portfolio_id) SELECT p.portfolio_name, tp.tech_market_value, tot.total_market_value, ROUND(tp.tech_market_value * 100.0 / tot.total_market_value, 2) AS tech_percentage FROM tech_part tp JOIN total_portfolio tot ON tot.portfolio_id = tp.portfolio_id JOIN portfolios p ON p.portfolio_id = tp.portfolio_id ORDER BY tech_percentage DESC;",
+   "independent_reference_calculation": "quantity x current_price per holding. The denominator includes bonds. Portfolios with no Technology holding are not listed.",
+   "difference": 0.004759331476812179,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Q8: Find portfolios that have holdings in more than 5 different sectors and show their diversification metrics",
+   "production_calculation": "SELECT p.portfolio_name, COUNT(DISTINCT s.sector_id) AS distinct_sectors, COUNT(h.holding_id) AS total_holdings, COUNT(DISTINCT s.sector_id) * 1.0 / COUNT(h.holding_id) AS diversification_ratio FROM portfolios p JOIN holdings h ON p.portfolio_id = h.portfolio_id JOIN securities s ON s.security_id = h.security_id GROUP BY p.portfolio_id, p.portfolio_name HAVING COUNT(DISTINCT s.sector_id) > 5 ORDER BY diversification_ratio DESC;",
+   "independent_reference_calculation": "Distinct stock sectors / all holdings including bonds; more than five sectors.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "U1: Which portfolios hold NVIDIA?",
+   "production_calculation": "SELECT DISTINCT p.portfolio_name FROM holdings h JOIN securities s ON s.security_id = h.security_id JOIN portfolios p ON p.portfolio_id = h.portfolio_id WHERE s.company_name = 'NVIDIA Corporation' OR s.symbol = 'NVDA'",
+   "independent_reference_calculation": "Portfolios holding NVDA.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "RESULT_VALIDATED"
+  },
+  {
+   "metric": "U2: How many holdings does the Dividend Aristocrats Fund have?",
+   "production_calculation": "SELECT COUNT(*) AS holding_count FROM holdings h JOIN portfolios p ON p.portfolio_id = h.portfolio_id WHERE p.portfolio_name = 'Dividend Aristocrats Fund';",
+   "independent_reference_calculation": "Row count of that fund's holdings.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "U3: At current prices, how much are the bonds held across all portfolios worth?",
+   "production_calculation": "SELECT SUM(h.quantity * s.current_price) AS total_bond_market_value FROM holdings h JOIN securities s ON s.security_id = h.security_id WHERE s.asset_type = 'Bond';",
+   "independent_reference_calculation": "quantity x current_price, bonds only.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "U4: List each bond with its coupon rate and maturity date.",
+   "production_calculation": "SELECT symbol, coupon_rate, maturity_date FROM securities WHERE asset_type = 'Bond'",
+   "independent_reference_calculation": "Bond rows from securities.csv.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "RESULT_VALIDATED"
+  },
+  {
+   "metric": "U5: Most recent beta for the Conservative Income Fund?",
+   "production_calculation": "SELECT rm.beta FROM risk_metrics rm JOIN portfolios p ON p.portfolio_id = rm.portfolio_id WHERE p.portfolio_name = 'Conservative Income Fund' AND rm.calculation_date = (SELECT MAX(calculation_date) FROM risk_metrics);",
+   "independent_reference_calculation": "Stored beta at the latest calculation date. Retrieval is checked; the source has no return series to recompute beta.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "NOT_INDEPENDENTLY_VERIFIABLE"
+  },
+  {
+   "metric": "U6: How many BUY transactions were made in the past 7 days?",
+   "production_calculation": "SELECT COUNT(*) AS buy_transaction_count FROM transactions WHERE transaction_type = 'BUY' AND transaction_date BETWEEN '2023-10-03' AND '2023-10-09';",
+   "independent_reference_calculation": "BUY rows in the seven days ending at the dataset's latest transaction date, 2023-10-09.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "U7: Which portfolios have never had their performance recorded?",
+   "production_calculation": "SELECT portfolio_name FROM portfolios WHERE portfolio_id NOT IN (SELECT DISTINCT portfolio_id FROM portfolio_performance);",
+   "independent_reference_calculation": "Portfolios absent from portfolio_performance.csv.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "RESULT_VALIDATED"
+  },
+  {
+   "metric": "U8: What is the average purchase price paid for Apple across all portfolios?",
+   "production_calculation": "SELECT AVG(h.purchase_price) AS average_purchase_price FROM holdings h JOIN securities s ON s.security_id = h.security_id WHERE s.symbol = 'AAPL';",
+   "independent_reference_calculation": "Mean purchase_price of AAPL holdings.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "U9: Show all transactions from last year.",
+   "production_calculation": "SELECT t.transaction_id, s.symbol, t.transaction_type, t.transaction_date, t.quantity, t.price FROM transactions t JOIN securities s ON s.security_id = t.security_id WHERE t.transaction_date BETWEEN '2022-01-01' AND '2022-12-31'",
+   "independent_reference_calculation": "Transactions in 2022, the calendar year before the dataset's latest date.",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "RESULT_VALIDATED"
+  },
+  {
+   "metric": "U10: Which sector has the most securities?",
+   "production_calculation": "SELECT sec.sector_name FROM sectors sec JOIN securities s ON sec.sector_id = s.sector_id GROUP BY sec.sector_id, sec.sector_name ORDER BY COUNT(s.security_id) DESC LIMIT 1;",
+   "independent_reference_calculation": "Sector with the most securities (8).",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Growth Equity Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Conservative Income Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Tech Innovation Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 1.1102230246251565e-16,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Balanced Portfolio",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: ESG Sustainable Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Small Cap Value Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: International Equity Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 1.1102230246251565e-16,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Fixed Income Plus",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Dividend Aristocrats Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Emerging Markets Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 1.1102230246251565e-16,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Total Stock Market Index Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 1.1102230246251565e-16,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Total Bond Market Index Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Exposure, Methods A and B, residual: Total International Index Fund",
+   "production_calculation": "calculate_exposure (Python and SQL paths)",
+   "independent_reference_calculation": "pandas groupby over holdings, securities and sectors CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Holding count per portfolio",
+   "production_calculation": "SELECT p.portfolio_name, COUNT(*) FROM holdings h JOIN portfolios p USING (portfolio_id) GROUP BY 1",
+   "independent_reference_calculation": "pandas over the CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Distinct securities per portfolio",
+   "production_calculation": "SELECT p.portfolio_name, COUNT(DISTINCT h.security_id) FROM holdings h JOIN portfolios p USING (portfolio_id) GROUP BY 1",
+   "independent_reference_calculation": "pandas over the CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Cost basis per portfolio",
+   "production_calculation": "SELECT p.portfolio_name, SUM(h.cost_basis) FROM holdings h JOIN portfolios p USING (portfolio_id) GROUP BY 1",
+   "independent_reference_calculation": "pandas over the CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Market value (quantity x current price) per portfolio",
+   "production_calculation": "SELECT p.portfolio_name, SUM(h.quantity * s.current_price) FROM holdings h JOIN securities s USING (security_id) JOIN portfolios p USING (portfolio_id) GROUP BY 1",
+   "independent_reference_calculation": "pandas over the CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Sum of weights per portfolio",
+   "production_calculation": "SELECT p.portfolio_name, SUM(h.current_weight) FROM holdings h JOIN portfolios p USING (portfolio_id) GROUP BY 1",
+   "independent_reference_calculation": "pandas over the CSVs",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "INDEPENDENTLY_RECONCILED"
+  },
+  {
+   "metric": "Stated AUM per portfolio (source-stated; not derivable from holdings, which cover part of it)",
+   "production_calculation": "SELECT portfolio_name, total_aum",
+   "independent_reference_calculation": "portfolios.csv",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "NOT_INDEPENDENTLY_VERIFIABLE"
+  },
+  {
+   "metric": "Latest NAV per portfolio (stored; no units documented)",
+   "production_calculation": "SELECT p.portfolio_name, x.nav FROM portfolio_performance x JOIN portfolios p USING (portfolio_id) WHERE x.performance_date = (SELECT MAX(performance_date) FROM portfolio_performance)",
+   "independent_reference_calculation": "portfolio_performance.csv at the latest date",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "NOT_INDEPENDENTLY_VERIFIABLE"
+  },
+  {
+   "metric": "Latest beta per portfolio (stored; no return series to recompute it)",
+   "production_calculation": "SELECT p.portfolio_name, x.beta FROM risk_metrics x JOIN portfolios p USING (portfolio_id) WHERE x.calculation_date = (SELECT MAX(calculation_date) FROM risk_metrics)",
+   "independent_reference_calculation": "risk_metrics.csv at the latest date",
+   "difference": 0.0,
+   "detail": "agrees",
+   "status": "NOT_INDEPENDENTLY_VERIFIABLE"
+  }
+ ]
+}
