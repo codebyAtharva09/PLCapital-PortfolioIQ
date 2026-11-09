@@ -10,7 +10,7 @@ from portfolioiq.llm import LLMCall, LLMError, LLMResult
 from portfolioiq.router import RouterDecision
 from portfolioiq.semantic import SemanticContext
 from portfolioiq.sql_tool import SqlDraft
-from portfolioiq_eval import benchmark, official
+from portfolioiq_eval import __main__ as evaluation_cli, benchmark, official
 from portfolioiq_eval.__main__ import main
 
 BUDGET = LLMError("budget_exhausted", "The request budget is used up: 3 of 3 API requests sent.", attempts=0)
@@ -165,3 +165,54 @@ def test_runs_from_different_models_are_never_scored_together(tmp_path, capsys):
     assert "more than one model" in mixed_models([official_run, other])
     assert main(["sql", "--rescore", str(official_run), str(other), "--reports-dir", str(tmp_path)]) == 2
     assert "Not scored" in capsys.readouterr().out
+
+
+def recorded_other_configuration(runs):
+    """One recorded run from another SQL prompt version, as the committed baseline runs are on a fresh clone."""
+    directory = runs / "official-baseline"
+    directory.mkdir(parents=True)
+    (directory / "run_meta.json").write_text('{"model": "fake-model", "sql_prompt_version": "aaaaaaaaaaaa"}', encoding="utf-8")
+    (directory / "official_outputs.jsonl").write_text("", encoding="utf-8")
+
+
+@pytest.fixture
+def default_folders(settings, monkeypatch, tmp_path):
+    """The default folders of a fresh clone with a key: they hold another configuration's runs."""
+    recorded_other_configuration(tmp_path / "runs")
+    monkeypatch.setattr(evaluation_cli, "REPORTS", tmp_path)
+    monkeypatch.setattr(evaluation_cli, "load_settings",
+                        lambda: dataclasses.replace(settings, gemini_api_key="test-key", gemini_model="fake-model"))
+    monkeypatch.setattr(evaluation_cli, "live_prompt_version", lambda _: "bbbbbbbbbbbb")
+    return tmp_path
+
+
+def test_plain_live_run_gets_its_own_folder_and_leaves_recorded_evidence_alone(readonly_db, default_folders, monkeypatch, capsys):
+    agent = PortfolioAgent(readonly_db, SemanticContext.from_db(readonly_db),
+                           ScriptedLLM([route("sql"), draft("SELECT COUNT(*) FROM portfolios")]))
+    monkeypatch.setattr(PortfolioAgent, "from_settings", lambda *_, **__: agent)
+    monkeypatch.setattr(evaluation_cli, "live_prompt_version", lambda _: agent.sql_tool.prompt_version)
+    assert main(["official", "--only", "Q1", "--min-interval", "0"]) == 0
+    out = capsys.readouterr().out
+    assert "Not scored" not in out and "Agent end to end: PASS 1" in out
+    folder = default_folders / "live" / f"fake-model-{agent.sql_tool.prompt_version}"
+    assert len(official.recorded_outputs(folder / "runs")) == 1 and (folder / "official_evaluation.json").exists()
+    assert [p.name for p in (default_folders / "runs").iterdir()] == ["official-baseline"]
+    assert not (default_folders / "official_evaluation.json").exists()
+    # Run again: the answered case is found in the same folder and is not asked twice (the scripted LLM is empty).
+    assert main(["official", "--only", "Q1", "--min-interval", "0"]) == 0
+    assert "Cases to ask Gemini: none (0)" in capsys.readouterr().out
+
+
+def test_plain_live_run_without_a_key_points_to_the_offline_score(monkeypatch, capsys):
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    monkeypatch.delenv("PORTFOLIOIQ_SQL_PROMPT", raising=False)
+    monkeypatch.delenv("GEMINI_MODEL", raising=False)
+    monkeypatch.setattr(official, "run", lambda *_, **__: pytest.fail("without a key nothing may be asked"))
+    assert main(["official"]) == 2  # the committed runs in reports/runs, as on a fresh clone
+    out = capsys.readouterr().out
+    assert "GEMINI_API_KEY is not set" in out and "--rescore --runs-dir reports/sprint_v2_3/candidate/runs" in out
+
+
+def test_explicit_folders_holding_another_configuration_are_still_refused(default_folders, capsys):
+    assert main(["official", "--runs-dir", str(default_folders / "runs"), "--reports-dir", str(default_folders / "mine")]) == 2
+    assert "Not scored" in capsys.readouterr().out and not (default_folders / "live").exists()

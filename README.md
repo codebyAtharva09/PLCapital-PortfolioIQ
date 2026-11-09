@@ -326,7 +326,7 @@ python -m portfolioiq integrity                                               # 
 
 ### Test results
 
-The offline suite passed **910 tests, 0 failed** on this commit, run on 9 November 2026 with Python 3.13 on Windows. Run it with `pytest`; it needs no key and no network.
+The offline suite passed **913 tests, 0 failed** on this commit, run on 10 November 2026 with Python 3.13 on Windows. Run it with `pytest`; it needs no key and no network.
 
 It covers SQL safety, exposure and financial calculations, routing, the CLI, the Streamlit pages, receipts, replay and the evaluators, using fakes in place of Gemini. A passing suite shows the code behaves as its tests expect. It does not show that a live model answers correctly or that the calculations are right for questions no test asks. Only the Gemini evaluation results above needed live access.
 
@@ -371,8 +371,8 @@ python -m portfolioiq_eval official --rescore --runs-dir reports/sprint_v2_3/can
 python -m portfolioiq_eval official --replay-check --runs-dir reports/sprint_v2_3/candidate/runs
 python -m portfolioiq_eval benchmark
 python -m portfolioiq_eval usage
-# A live run needs its own folders: runs from different SQL prompt versions are refused
-python -m portfolioiq_eval official --max-requests 18 --runs-dir reports/<new>/runs --reports-dir reports/<new>
+# Live: Q1-Q10 through the agent, about 18 requests. Kept under reports/live/, apart from the recorded evidence
+python -m portfolioiq_eval official --max-requests 18
 
 # Roll back to the original SQL configuration (PowerShell)
 $env:PORTFOLIOIQ_SQL_PROMPT = "baseline"
