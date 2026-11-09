@@ -23,8 +23,7 @@ from portfolioiq.config import PROJECT_ROOT, load_settings
 from portfolioiq_eval import agent_eval, benchmark, independent, official, semantic_compare, sql_eval, stability, usage
 
 REPORTS = PROJECT_ROOT / "reports"
-RESCORE_RECORDED = ("python -m portfolioiq_eval official --rescore --runs-dir reports/sprint_v2_3/candidate/runs "
-                    "--reports-dir reports/rescore")
+ACTIVE_RUNS = REPORTS / "sprint_v2_3" / "candidate" / "runs"  # the recorded live runs of the active SQL configuration
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -172,11 +171,26 @@ def _refuse(reason: str) -> int:
     return 2
 
 
+def _default_folders_hold_another_configuration(args, settings) -> bool:
+    """True for a plain command on a fresh clone: the default folders hold the baseline's runs, not the active configuration's."""
+    if args.runs_dir != REPORTS / "runs" or args.reports_dir != REPORTS:
+        return False
+    recorded = official.recorded_outputs(args.runs_dir) + sql_eval.recorded_outputs(args.runs_dir)
+    return mixed_models(recorded, settings.gemini_model, live_prompt_version(settings)) is not None
+
+
+def _use_active_runs(args) -> None:
+    args.runs_dir, args.reports_dir = ACTIVE_RUNS, REPORTS / "rescore"
+    print(f"Using the recorded live runs of the active configuration: {ACTIVE_RUNS}")
+
+
 def _sql(args, settings) -> int:
     shape = args.set == "shape"
     if shape and (args.runs_dir == REPORTS / "runs" or args.reports_dir == REPORTS):
         return _refuse("the result-shape set must use its own --runs-dir and --reports-dir, so that its answers never "
                        "mix with the official and unseen runs or replace their reports")
+    if args.rescore == [] and not shape and _default_folders_hold_another_configuration(args, settings):
+        _use_active_runs(args)
     cases = sql_eval.load_shape_cases() if shape else sql_eval.load_cases()
     runs_dir = getattr(args, "runs_dir", REPORTS / "runs")
     if args.rescore is not None:
@@ -235,6 +249,16 @@ def _agent(args, settings) -> int:
 
 
 def _official(args, settings) -> int:
+    if _default_folders_hold_another_configuration(args, settings):
+        if args.rescore or args.replay_check:
+            _use_active_runs(args)
+        elif not settings.gemini_api_key:
+            return _refuse("GEMINI_API_KEY is not set, so the agent cannot be run live. To score the recorded live run "
+                           "without a key: python -m portfolioiq_eval official --rescore")
+        else:  # a folder of its own for this model and prompt version, so the recorded evidence stays as it is
+            args.reports_dir = REPORTS / "live" / re.sub(r"[^\w.-]+", "-", f"{settings.gemini_model}-{live_prompt_version(settings)}")
+            args.runs_dir = args.reports_dir / "runs"
+            print(f"The default folders hold runs from another configuration, so this run is kept in {args.reports_dir}")
     cases = official.load_cases()
     existing = official.recorded_outputs(args.runs_dir)
     if args.replay_check:
@@ -251,19 +275,8 @@ def _official(args, settings) -> int:
               f"({s['total']} questions). No request was sent.")
         return 0 if s["identical"] == s["compared"] else 1
     sql_outputs = sql_eval.recorded_outputs(args.runs_dir)
-    model, prompt = (None, None) if args.rescore else (settings.gemini_model, live_prompt_version(settings))
-    reason = mixed_models(existing + sql_outputs, model, prompt)
-    if reason and not args.rescore and args.runs_dir == REPORTS / "runs" and args.reports_dir == REPORTS:
-        # A plain live run, and the default folders hold another configuration's evidence (the baseline's, on a fresh
-        # clone). That evidence stays as it is, so the run gets a folder of its own for this model and prompt version.
-        if not settings.gemini_api_key:
-            return _refuse("GEMINI_API_KEY is not set, so the agent cannot be run live. To score the recorded live run "
-                           f"without a key: {RESCORE_RECORDED}")
-        args.reports_dir = REPORTS / "live" / re.sub(r"[^\w.-]+", "-", f"{model}-{prompt}")
-        args.runs_dir = args.reports_dir / "runs"
-        print(f"The default folders hold runs from another configuration, so this run is kept in {args.reports_dir}")
-        existing, sql_outputs = official.recorded_outputs(args.runs_dir), sql_eval.recorded_outputs(args.runs_dir)
-        reason = mixed_models(existing + sql_outputs, model, prompt)
+    reason = mixed_models(existing + sql_outputs, None if args.rescore else settings.gemini_model,
+                          None if args.rescore else live_prompt_version(settings))
     if reason:
         return _refuse(reason)
     if not args.rescore:

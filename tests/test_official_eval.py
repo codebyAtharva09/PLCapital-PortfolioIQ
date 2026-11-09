@@ -210,7 +210,19 @@ def test_plain_live_run_without_a_key_points_to_the_offline_score(monkeypatch, c
     monkeypatch.setattr(official, "run", lambda *_, **__: pytest.fail("without a key nothing may be asked"))
     assert main(["official"]) == 2  # the committed runs in reports/runs, as on a fresh clone
     out = capsys.readouterr().out
-    assert "GEMINI_API_KEY is not set" in out and "--rescore --runs-dir reports/sprint_v2_3/candidate/runs" in out
+    assert "GEMINI_API_KEY is not set" in out and "official --rescore" in out
+
+
+def test_plain_offline_commands_use_the_active_configurations_runs(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    monkeypatch.delenv("PORTFOLIOIQ_SQL_PROMPT", raising=False)
+    monkeypatch.delenv("GEMINI_MODEL", raising=False)
+    written = []
+    monkeypatch.setattr(official, "write_reports", lambda report, directory: written.append(directory) or (tmp_path / "o.json",))
+    assert main(["official", "--rescore"]) == 0  # as on a fresh clone: no folder flags, no key
+    assert "Agent end to end: PASS 10" in capsys.readouterr().out and written == [evaluation_cli.REPORTS / "rescore"]
+    assert main(["official", "--replay-check"]) == 0
+    assert "for 10 of 10 compared" in capsys.readouterr().out
 
 
 def test_explicit_folders_holding_another_configuration_are_still_refused(default_folders, capsys):
