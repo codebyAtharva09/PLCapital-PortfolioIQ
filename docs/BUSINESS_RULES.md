@@ -176,3 +176,14 @@ These make B1 to B3 safe on imperfect data without altering it. They are impleme
 | E4 | A stock has no sector | WARNING; shown as the excluded line "Stocks without a sector" and left out of the Method B denominator |
 | E5 | Tolerances | A residual is reported above 0.0001 (0.01 percentage points); the Python and SQL paths must agree within 1e-9 |
 | E6 | Display rounding | Half up to 2 decimals at display time only (15.625% shows as 15.63); totals use unrounded values |
+
+## Independent verification rules (November 2026 audit)
+
+Checked against the original assessment files on 2026-11-09. All nine CSVs, the schema and the ground truth are byte-identical after line-ending normalisation. The database holds 9 tables, 13 portfolios, 30 securities (25 stocks, 5 bonds), 95 holdings, 24 transactions, 330 prices, 44 performance rows and 44 risk rows. There are no orphaned or duplicate holdings.
+
+- **Diversification ratio.** Distinct stock sectors divided by all holdings, bonds included. It is rebuilt per portfolio from holding records, without reading the SQL. Total Stock Market Index Fund gives 6 / 12 = 0.500 and is the only portfolio above five sectors.
+- **Bonds.** The five bonds have no sector in the supplied data, so they add to holdings and never to sectors. The supplied fund above holds no bonds, so errors that depend on a bond are tested on a modified copy of the database.
+- **Column roles.** A component column is matched to its figure by name: `sector`, or `holding` or `total`. A column with another name is reported as not verifiable.
+- **Selections.** A superlative or a top-N diversification question is reported as not verifiable. The check models thresholds on sectors, a named portfolio, and all portfolios.
+- **Counts.** Counts are rebuilt from holdings, portfolios or securities. Counts over other tables are reported as not verifiable.
+- **"No sector" groups.** A result that omits a group with no sector is not treated as incomplete, because an inner join on sectors rightly has no such group.

@@ -149,3 +149,6 @@ Added after the frozen baseline and recorded in `evaluation/security_manifest.js
 
 Tests: `tests/test_sql_hardening.py`.
 
+## Generated-SQL rules and the November 2026 audit
+
+`src/portfolioiq/sql_generated_guard.py` adds rejections on top of the frozen guard: recursive CTEs, typed functions outside the allow-list, system-table names used as CTEs, and very large or deeply nested queries. See `docs/SECURITY_AUDIT.md` for the threat model, findings and remaining risks.
