@@ -21,7 +21,7 @@ from typing import TypeVar
 from pydantic import BaseModel, ValidationError
 
 from portfolioiq.config import Settings
-from portfolioiq.llm import SDK_VERSION, LLMCall, LLMError, LLMResult, request_key
+from portfolioiq.llm import SDK_VERSION, LLMCall, LLMError, LLMResult, request_key, strict_value
 
 T = TypeVar("T", bound=BaseModel)
 LEDGER_HASH_LENGTH = 16  # the ledger records the first 16 hex characters of each request key
@@ -58,8 +58,8 @@ class RecordedLLM:
         if entry is None:
             raise LLMError("not_recorded", NOT_RECORDED_MESSAGE)
         try:
-            value = schema.model_validate_json(entry["raw_response"])
-        except ValidationError:
+            value = strict_value(entry["raw_response"], schema)
+        except (ValidationError, ValueError):
             raise LLMError("malformed_output", f"{DEMO_LABEL}: the recorded response does not match the expected "
                                                "format, so it was not used.") from None
         call = LLMCall(model=entry.get("model") or self.model, model_version=entry.get("model_version"),

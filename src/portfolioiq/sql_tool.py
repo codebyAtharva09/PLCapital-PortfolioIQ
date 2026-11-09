@@ -27,7 +27,8 @@ from portfolioiq.financial_verification import FinancialVerification, SourceReco
 from portfolioiq.semantic import (CANDIDATE_22_EXAMPLES, CANDIDATE_24_EXAMPLES, CANDIDATE_24_LATEST_DATE_RULE, CANDIDATE_EXAMPLES,
                                   LATEST_DATE_RULE, VERIFIED_EXAMPLES, SemanticContext, VerifiedExample)
 from portfolioiq.sql_engine import NOT_ALLOWED_MESSAGE, SqlExecution, ensure_reference_db, execute_sql, open_read_only
-from portfolioiq.sql_guard import SECURITY_CATEGORIES, SqlValidation, validate_sql
+from portfolioiq.sql_generated_guard import validate_generated_sql
+from portfolioiq.sql_guard import SECURITY_CATEGORIES, SqlValidation
 from portfolioiq.sql_policy import PolicyAssessment, PolicyReport, Vocabulary, assess, assess_result
 from portfolioiq.verification import Check, CheckStatus, VerificationStatus
 
@@ -317,7 +318,7 @@ class SqlTool:
                     draft.decline_reason, "unanswerable")
                 return self._finish(base, attempts, started, status, draft.explanation)
 
-            validation = validate_sql(draft.sql, self.context.schema)
+            validation = validate_generated_sql(draft.sql, self.context.schema)
             if not validation.ok:
                 attempts.append(SqlAttempt(number=number, sql=draft.sql, explanation=draft.explanation,
                                            validation=validation, llm=drafted.call))
@@ -391,7 +392,7 @@ class SqlTool:
             caveats += assessment.caveats()
             caveats += [f"Result shape: {i.detail}" for i in assessment.issues if i.severity == "error"]
         financial = verify_sql_result(last.sql, last.execution.columns, last.execution.rows, self.context.schema, self.source,
-                                      truncated=last.execution.truncated)
+                                      truncated=last.execution.truncated, question=base["question"])
         if financial.status is VerificationStatus.VERIFICATION_FAILED:  # only then do the structural checks change
             checks.append(Check(name="Figures rebuilt from source records", status=CheckStatus.FAIL, rule="independent financial verification", detail=financial.summary))
             caveats.append(f"Independent verification failed, so do not use these figures: {financial.summary}")

@@ -110,7 +110,7 @@ def _use_example(key: str) -> None:
 def _run(question: str, mode: str) -> None:
     text = (question or "").strip()
     signature = (mode, text)
-    if evidence.is_duplicate("ask_last", signature):
+    if evidence.is_duplicate("ask_last", signature) or evidence.live_allowance_used(mode):
         return
     try:
         with st.spinner("Running the agent…"):

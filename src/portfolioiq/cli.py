@@ -164,7 +164,7 @@ def render_receipt(receipt: FinancialAnswerReceipt) -> str:
     lines.append(f"Verification: {receipt.verification.value}")
     if receipt.sql is not None and receipt.sql.financial_verification is not None:
         lines.append(f"Financial verification: {receipt.sql.financial_verification.status.value}. {_text(receipt.sql.financial_verification.summary)}")
-    lines.append(f"Receipt fingerprint: {receipt.fingerprint()[:16]}")
+    lines.append(f"Receipt fingerprint: {receipt.fingerprint()}")
     if receipt.caveats:
         lines += ["Caveats"] + [f"  - {c}" for c in receipt.caveats]
     lines.append(f"Answer basis: {receipt.answer_basis}")

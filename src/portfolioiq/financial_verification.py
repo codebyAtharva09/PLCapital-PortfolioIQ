@@ -4,7 +4,8 @@ The generated SQL is never executed a second time. Its AST says which figure eac
 rebuilds that figure from the source records, loaded by fixed queries, and compares it with the row the query returned.
 
 Supported figures: market value (quantity x current price, per holding or summed), cost basis (summed), AUM (stated, summed),
-stated weights (summed), and any percentage whose two sides are among these. Rows may be keyed by any source column, and
+stated weights (summed), counts and distinct counts of holdings, portfolios and securities, any ratio or percentage whose two sides
+are among these, and the assessment's diversification ratio, which is rebuilt from its own definition without reading the SQL. Rows may be keyed by any source column, and
 filtered by simple comparisons on source columns.
 
 The status never claims more than was done:
@@ -25,15 +26,18 @@ from dataclasses import dataclass
 from typing import Any
 
 import sqlglot
-from pydantic import BaseModel, ConfigDict
+import re
+
+from pydantic import BaseModel, ConfigDict, model_validator
 from sqlglot import exp
 
-from portfolioiq.sql_policy import Measure, OutputColumn, QueryShape, _find_ratio, _measure, _Scope, _strip, analyse
+from portfolioiq.sql_policy_v24 import Measure, OutputColumn, QueryShape, _find_ratio, _measure, _Scope, _strip, analyse  # query analysis only; no policy decision
 from portfolioiq.verification import VerificationStatus
 
 MATCH_RELATIVE = 1e-9
 MATCH_ABSOLUTE = 0.005  # the evaluation comparator's numeric tolerance
-_KIND_LABEL = {"market_value": "market value (quantity x current price)", "cost_basis": "cost basis", "aum": "stated AUM", "weight": "stated weight"}
+_KIND_LABEL = {"market_value": "market value (quantity x current price)", "cost_basis": "cost basis", "aum": "stated AUM", "weight": "stated weight",
+               "count": "count of records", "count_distinct": "count of distinct values"}
 
 
 class VerifiedFigure(BaseModel):
@@ -56,6 +60,13 @@ class FinancialVerification(BaseModel):
     rows_checked: int = 0
     figures: list[VerifiedFigure] = []
 
+    @model_validator(mode="after")
+    def _reconciled_requires_evidence(self) -> FinancialVerification:
+        if self.status is VerificationStatus.INDEPENDENTLY_RECONCILED and (
+                not self.rows_checked or not self.figures or any(f.outcome != "reconciled" for f in self.figures)):
+            raise ValueError("A result cannot be reconciled without a rebuilt figure for every calculated column.")
+        return self
+
 
 @dataclass(frozen=True)
 class SourceRecords:
@@ -63,6 +74,8 @@ class SourceRecords:
 
     holdings: tuple[dict[str, Any], ...]  # joined in Python to their security, sector and portfolio
     portfolios: tuple[dict[str, Any], ...]
+    securities: tuple[dict[str, Any], ...] = ()  # joined to their sector
+    problems: tuple[str, ...] = ()  # why the records themselves cannot be relied on
 
     @classmethod
     def load(cls, conn: sqlite3.Connection) -> SourceRecords:
@@ -76,12 +89,23 @@ class SourceRecords:
         security_by_id = {s["securities.security_id"]: s for s in securities}
         sector_by_id = {s["sectors.sector_id"]: s for s in sectors}
         empty_sector = {key: None for key in (sectors[0] if sectors else {})}
-        holdings = []
+        problems: list[str] = []
+        if len(sector_by_id) != len(sectors):
+            problems.append("a sector id appears more than once")
+        holdings, seen = [], set()
         for holding in table("holdings"):
-            security = security_by_id[holding["holdings.security_id"]]
+            security, portfolio = security_by_id.get(holding["holdings.security_id"]), portfolio_by_id.get(holding["holdings.portfolio_id"])
+            if security is None or portfolio is None:
+                problems.append(f"holding {holding['holdings.holding_id']} refers to a missing security or portfolio")
+                continue
+            key = (holding["holdings.portfolio_id"], holding["holdings.security_id"])
+            if key in seen:
+                problems.append(f"portfolio {key[0]} holds security {key[1]} more than once")
+            seen.add(key)
             sector = sector_by_id.get(security["securities.sector_id"], empty_sector)
-            holdings.append({**holding, **security, **sector, **portfolio_by_id[holding["holdings.portfolio_id"]]})
-        return cls(tuple(holdings), tuple(portfolios))
+            holdings.append({**holding, **security, **sector, **portfolio})
+        joined = tuple({**s, **sector_by_id.get(s["securities.sector_id"], empty_sector)} for s in securities)
+        return cls(tuple(holdings), tuple(portfolios), joined, tuple(problems))
 
 
 @dataclass(frozen=True)
@@ -90,14 +114,23 @@ class _Recipe:
 
     kind: str
     aggregated: bool
+    pool: str  # holdings | portfolios | securities
+    column: str | None  # the counted column; None counts rows
     keep: Callable[[dict[str, Any]], bool]
     fill_zero: bool  # entities with no qualifying records are shown as zero by this query
     selects_rows: bool  # a HAVING-style condition decides which rows appear
     grouped: bool  # False: one value for the whole table, whatever the row's key
 
-    @property
-    def records_of_portfolios(self) -> bool:
-        return self.kind == "aum"
+    def combine(self, records: Sequence[dict[str, Any]]) -> float | None:
+        """The figure for these records; None when there is nothing to compute it from."""
+        if self.kind == "count":
+            return float(sum(1 for r in records if self.column is None or r.get(self.column) is not None))
+        if self.kind == "count_distinct":
+            return float(len({r.get(self.column) for r in records if r.get(self.column) is not None}))
+        values = [v for v in (self.value(r) for r in records) if v is not None]
+        if not values or (not self.aggregated and len(values) != 1):
+            return None
+        return math.fsum(values)
 
     def value(self, record: dict[str, Any]) -> float | None:
         if self.kind == "market_value":
@@ -108,10 +141,10 @@ class _Recipe:
 
 
 def verify_sql_result(sql: str, columns: Sequence[str], rows: Sequence[Sequence[Any]], schema: dict[str, dict[str, str]],
-                      source: SourceRecords | None, *, truncated: bool = False) -> FinancialVerification:
+                      source: SourceRecords | None, *, truncated: bool = False, question: str | None = None) -> FinancialVerification:
     """Never raises: a defect here reports 'not verifiable' and can never mark an answer as reconciled."""
     try:
-        return _verify(sql, columns, rows, schema, source, truncated)
+        return _verify(sql, columns, rows, schema, source, truncated, question)
     except Exception as exc:  # noqa: BLE001
         return _not_verifiable(f"The answer could not be analysed for independent verification ({type(exc).__name__}).")
 
@@ -120,7 +153,8 @@ def _not_verifiable(summary: str, figures: Sequence[VerifiedFigure] = (), rows: 
     return FinancialVerification(status=VerificationStatus.NOT_INDEPENDENTLY_VERIFIABLE, summary=summary, rows_checked=rows, figures=list(figures))
 
 
-def _verify(sql: str, columns: Sequence[str], rows: Sequence[Sequence[Any]], schema, source: SourceRecords | None, truncated: bool) -> FinancialVerification:
+def _verify(sql: str, columns: Sequence[str], rows: Sequence[Sequence[Any]], schema, source: SourceRecords | None, truncated: bool,
+            question: str | None) -> FinancialVerification:
     tree = sqlglot.parse_one(sql, read="sqlite")
     if not isinstance(tree, exp.Select):
         return _not_verifiable("A set operation cannot be reconstructed from source records.")
@@ -136,8 +170,15 @@ def _verify(sql: str, columns: Sequence[str], rows: Sequence[Sequence[Any]], sch
         return _not_verifiable("The result was cut at an output limit, so it cannot be compared in full.")
     if len(columns) != len(shape.outputs):
         return _not_verifiable("The result's columns do not line up with the query's output.")
+    if source.problems:
+        return _not_verifiable("The source records fail integrity checks: " + "; ".join(source.problems[:3]))
+    if question and DIVERSIFICATION.search(question):
+        return _verify_diversification(question, tree, shape, scope, rows, source)
     if not rows:
         return _not_verifiable("The query returned no rows to compare.")
+    contradiction = _contradicts_question(question, shape, source) if question else None
+    if contradiction:
+        return FinancialVerification(status=VerificationStatus.VERIFICATION_FAILED, summary=contradiction, rows_checked=len(rows))
     keys = [i for i, o in enumerate(shape.outputs) if o.kind == "column"]
     figures = [_check_output(index, tree, shape, scope, keys, rows, source) for index in calculated]
     failed = [f for f in figures if f.outcome == "mismatch"]
@@ -174,12 +215,14 @@ def _check_output(index: int, tree: exp.Select, shape: QueryShape, scope: _Scope
     factor = _literal_factor(output.sql)
     if factor is None:
         return _not_supported(output, "it is scaled in a way that cannot be reconstructed")
-    recipe = _recipe(output.measure, _is_grouped(expression, scope), scope.schema)
+    recipe = _recipe(output.measure, _tables_of(expression, scope))
     if isinstance(recipe, str):
         return _not_supported(output, recipe)
     if (problem := _keys_available(recipe, key_columns, source)):
         return _not_supported(output, problem)
     label, worst, count = _KIND_LABEL[recipe.kind], 0.0, 0
+    if recipe.kind in ("count", "count_distinct") and factor != 1.0:
+        return _not_supported(output, "a scaled count cannot be reconstructed")
     groups = _groups(recipe, key_columns, source)
     for row in rows:
         expected = _expected(recipe, key_columns, row, source)
@@ -197,7 +240,7 @@ def _check_output(index: int, tree: exp.Select, shape: QueryShape, scope: _Scope
     if completeness:
         return _mismatch(output, label, completeness)
     return VerifiedFigure(column=output.name, figure=label, outcome="reconciled", max_difference=worst,
-                          detail=f"{count} value(s) rebuilt from {'portfolio' if recipe.records_of_portfolios else 'holding'} records.")
+                          detail=f"{count} value(s) rebuilt from {recipe.pool} records.")
 
 
 def _check_ratio(index: int, output: OutputColumn, division: exp.Div, scope: _Scope, scaled: bool, key_columns, rows, source: SourceRecords,
@@ -206,7 +249,7 @@ def _check_ratio(index: int, output: OutputColumn, division: exp.Div, scope: _Sc
         return _not_supported(output, "it divides by a fixed number")
     sides = []
     for side in (division.left, division.right):
-        recipe = _recipe(_measure(scope.trace(side), scope.schema, ratio_side=True), _is_grouped(side, scope), scope.schema)
+        recipe = _recipe(_measure(scope.trace(side), scope.schema, ratio_side=True), _tables_of(side, scope))
         if isinstance(recipe, str):
             return _not_supported(output, recipe)
         if (problem := _keys_available(recipe, key_columns, source)):
@@ -226,13 +269,28 @@ def _check_ratio(index: int, output: OutputColumn, division: exp.Div, scope: _Sc
     return VerifiedFigure(column=output.name, figure=label, outcome="reconciled", max_difference=worst, detail=f"{len(rows)} value(s) rebuilt from both sides of the division.")
 
 
-def _recipe(measure: Measure, grouped: bool, schema) -> _Recipe | str:
+def _recipe(measure: Measure, tables: frozenset[str] | None) -> _Recipe | str:
     """How to rebuild a measure, or the reason it cannot be rebuilt."""
     node = _strip(sqlglot.parse_one(measure.value, read="sqlite"))
-    aggregated = isinstance(node, exp.Sum)
+    aggregated = isinstance(node, (exp.Sum, exp.Count))
     inner = _strip(node.this) if aggregated else node
-    kind = None
-    if isinstance(inner, exp.Mul) and {_name(_strip(inner.left)), _name(_strip(inner.right))} == {"holdings.quantity", "securities.current_price"}:
+    kind, column, pool = None, None, "holdings"
+    if isinstance(node, exp.Count):
+        pool = _count_pool(tables)
+        if pool is None:
+            return f"counting rows from {', '.join(sorted(tables or [])) or 'these tables'} is not supported"
+        if isinstance(inner, exp.Distinct):
+            names = [_name(_strip(e)) for e in inner.expressions]
+            if len(names) != 1 or names[0] is None:
+                return f"{measure.value} is not a supported count"
+            kind, column = "count_distinct", names[0]
+        elif isinstance(inner, exp.Star):
+            kind = "count"
+        elif _name(inner):
+            kind, column = "count", _name(inner)
+        else:
+            return f"{measure.value} is not a supported count"
+    elif isinstance(inner, exp.Mul) and {_name(_strip(inner.left)), _name(_strip(inner.right))} == {"holdings.quantity", "securities.current_price"}:
         kind = "market_value"
     elif aggregated and _name(inner) == "holdings.cost_basis":
         kind = "cost_basis"
@@ -258,8 +316,48 @@ def _recipe(measure: Measure, grouped: bool, schema) -> _Recipe | str:
         return "AUM filtered through holdings cannot be reconstructed"
     if kind == "aum" and measure.drops_unclassified:
         return "AUM filtered through holdings cannot be reconstructed"
-    return _Recipe(kind=kind, aggregated=aggregated, keep=lambda record: all(p(record) for p in predicates),
-                   fill_zero=measure.conditional or measure.zero_filled, selects_rows=selects_rows, grouped=grouped)
+    if kind == "aum":
+        pool = "portfolios"
+    return _Recipe(kind=kind, aggregated=aggregated, pool=pool, column=column, keep=lambda record: all(p(record) for p in predicates),
+                   fill_zero=measure.conditional or measure.zero_filled, selects_rows=selects_rows, grouped=measure.grouped or not aggregated)
+
+
+def _count_pool(tables: frozenset[str] | None) -> str | None:
+    if not tables:
+        return None
+    if "holdings" in tables and tables <= {"holdings", "securities", "sectors", "portfolios"}:
+        return "holdings"
+    if tables == {"portfolios"}:
+        return "portfolios"
+    if tables <= {"securities", "sectors"} and "securities" in tables:
+        return "securities"
+    return None
+
+
+def _tables_of(expression: exp.Expression, scope: _Scope) -> frozenset[str] | None:
+    """The base tables behind a value, following aliases, CTEs and scalar subqueries to the SELECT that computes it."""
+    node, current = expression, scope
+    for _ in range(12):
+        node = _strip(node)
+        if isinstance(node, exp.Mul):
+            node = _strip(node.left) if not isinstance(_strip(node.left), exp.Literal) else _strip(node.right)
+            continue
+        if isinstance(node, exp.Subquery) and isinstance(node.this, exp.Select):
+            current = _Scope(node.this, current.schema, current.ctes, current.depth + 1)
+            outputs = list(current.outputs().values())
+            if len(outputs) != 1:
+                return None
+            node = outputs[0]
+            continue
+        if isinstance(node, exp.Column):
+            found = current.definition(node)
+            if found is None:
+                break
+            current, node = found
+            continue
+        break
+    tables = [s for s in current.sources.values() if isinstance(s, str)]
+    return frozenset(tables) if len(tables) == len(current.sources) else None
 
 
 def _name(node: exp.Expression) -> str | None:
@@ -295,36 +393,16 @@ def _value(node: exp.Expression) -> Any:
     return literal.this if literal.is_string else float(literal.this)
 
 
-def _is_grouped(expression: exp.Expression, scope: _Scope) -> bool:
-    """Whether the figure is computed per group, following aliases and CTEs. A scalar subquery is one value for the whole query."""
-    node, current = expression, scope
-    for _ in range(12):
-        node = _strip(node)
-        if isinstance(node, exp.Mul):  # a fixed factor does not change where the value comes from
-            node = _strip(node.left) if not isinstance(_strip(node.left), exp.Literal) else _strip(node.right)
-            continue
-        if isinstance(node, exp.Subquery):
-            return False
-        if isinstance(node, exp.Column):
-            found = current.definition(node)
-            if found is None:
-                return True  # a stored value belongs to its row
-            current, node = found
-            continue
-        return current.select.args.get("group") is not None or node.find(exp.AggFunc) is None
-    return True
-
-
 def _keys_available(recipe: _Recipe, key_columns, source: SourceRecords) -> str | None:
     if not recipe.grouped:
         return None
-    pool = source.portfolios if recipe.records_of_portfolios else source.holdings
+    pool = _pool(recipe, source)
     missing = [column for _, column in key_columns if pool and column not in pool[0]]
     return f"the row key {missing[0]} is not available from these records" if missing else None
 
 
 def _pool(recipe: _Recipe, source: SourceRecords) -> Sequence[dict[str, Any]]:
-    return source.portfolios if recipe.records_of_portfolios else source.holdings
+    return {"holdings": source.holdings, "portfolios": source.portfolios, "securities": source.securities}[recipe.pool]
 
 
 def _expected(recipe: _Recipe, key_columns, row: Sequence[Any], source: SourceRecords) -> float | None:
@@ -332,22 +410,20 @@ def _expected(recipe: _Recipe, key_columns, row: Sequence[Any], source: SourceRe
     wanted = [(column, row[i]) for i, column in key_columns] if recipe.grouped else []
     in_key = [r for r in _pool(recipe, source) if all(_same(r.get(column), value) for column, value in wanted)]
     matching = [r for r in in_key if recipe.keep(r)]
-    values = [v for v in (recipe.value(r) for r in matching) if v is not None]
-    if not values:
+    if not matching:
+        if recipe.kind in ("count", "count_distinct"):
+            return 0.0  # counting nothing is zero; it needs no record to support it
         return 0.0 if recipe.fill_zero and in_key else None
-    if not recipe.aggregated and len(values) != 1:
-        return None
-    return math.fsum(values)
+    return recipe.combine(matching)
 
 
 def _groups(recipe: _Recipe, key_columns, source: SourceRecords) -> dict[tuple, float]:
-    totals: dict[tuple, list[float]] = defaultdict(list)
+    members: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
     for record in _pool(recipe, source):
         if recipe.keep(record):
-            value = recipe.value(record)
-            if value is not None:
-                totals[tuple(record.get(column) for _, column in key_columns)].append(value)
-    return {key: math.fsum(values) for key, values in totals.items()}
+            members[tuple(record.get(column) for _, column in key_columns)].append(record)
+    totals = {key: recipe.combine(records) for key, records in members.items()}
+    return {key: value for key, value in totals.items() if value is not None}
 
 
 def _completeness(recipe: _Recipe, key_columns, rows, groups: dict[tuple, float], shape: QueryShape, index: int, factor: float) -> str | None:
@@ -356,7 +432,7 @@ def _completeness(recipe: _Recipe, key_columns, rows, groups: dict[tuple, float]
         return None
     returned = {tuple(row[i] for i, _ in key_columns) for row in rows}
     if shape.limit is None:
-        absent = [key for key in groups if key not in returned]
+        absent = [key for key in groups if key not in returned and None not in key]  # an inner join rightly has no "no sector" group
         return f"{len(absent)} group(s) with source records are missing from the result" if absent else None
     if shape.order_by and shape.outputs[index].base_columns and shape.order_by[0].base_columns == shape.outputs[index].base_columns:
         expected = sorted((v * factor for v in groups.values()), reverse=shape.order_by[0].descending)[:shape.limit]
@@ -404,6 +480,130 @@ def _literal_factor(sql: str) -> float | None:
 
 def _row_label(key_columns, row: Sequence[Any]) -> str:
     return ", ".join(str(row[i]) for i, _ in key_columns) or "(single figure)"
+
+
+# --- checks that use the question, and the assessment's diversification ratio ---------------------------------------------
+
+DIVERSIFICATION = re.compile(r"\bdiversif", re.I)
+_THRESHOLD = re.compile(r"\b(more than|over|at least|fewer than|less than)\s+(\d+)\s+(?:\w+\s+)?sectors?\b", re.I)
+_SELECTION_NOT_MODELLED = re.compile(r"\b(most|least|top|bottom|best|worst|highest|lowest|\d+)\b", re.I)
+_ASKS_RATIO = re.compile(r"\b(ratio|metrics?)\b", re.I)
+_COMPARE = {"more than": lambda a, n: a > n, "over": lambda a, n: a > n, "at least": lambda a, n: a >= n, "fewer than": lambda a, n: a < n, "less than": lambda a, n: a < n}
+_NUMERIC_TOLERANCE = 0.0006  # the diversification ratio is commonly shown to three decimals
+
+
+def _contradicts_question(question: str, shape: QueryShape, source: SourceRecords) -> str | None:
+    """A filter that names a different portfolio or sector from the one the question names; the figure would be right for the wrong thing."""
+    lowered = question.lower()
+    named = {p["portfolios.portfolio_name"] for p in source.portfolios if p["portfolios.portfolio_name"].lower() in lowered}
+    sectors = {s for s in {r.get("sectors.sector_name") for r in source.securities} if s and re.search(rf"\b{re.escape(s.lower())}\b", lowered)}
+    for output in shape.outputs:
+        for text in (output.measure.conditions if output.measure is not None else ()):
+            condition = _strip(sqlglot.parse_one(text, read="sqlite"))
+            if not isinstance(condition, exp.EQ) or not _is_value(condition.right):
+                continue
+            column, value = _name(_strip(condition.left)), _value(condition.right)
+            if column == "portfolios.portfolio_name" and named and value not in named:
+                return f"The query filters to {value}, but the question names {', '.join(sorted(named))}."
+            if column == "sectors.sector_name" and sectors and value not in sectors:
+                return f"The query filters to {value}, but the question names {', '.join(sorted(sectors))}."
+    return None
+
+
+def diversification_by_portfolio(source: SourceRecords) -> dict[str, tuple[int, int, float]]:
+    """(distinct stock sectors, all holdings including bonds, ratio) per portfolio, from the assessment's definition."""
+    sectors: dict[str, set] = defaultdict(set)
+    totals: dict[str, int] = defaultdict(int)
+    for holding in source.holdings:
+        name = holding["portfolios.portfolio_name"]
+        totals[name] += 1
+        if holding["securities.asset_type"] == "Stock" and holding["securities.sector_id"] is not None:
+            sectors[name].add(holding["securities.sector_id"])
+    return {name: (len(sectors[name]), total, len(sectors[name]) / total) for name, total in totals.items()}
+
+
+def _component_role(name: str) -> str | None:
+    lowered = name.lower()
+    if "sector" in lowered:
+        return "sectors"
+    return "holdings" if "holding" in lowered or "total" in lowered else None
+
+
+def _expected_selection(question: str, truth: dict[str, tuple[int, int, float]]) -> set[str] | None:
+    """Which portfolios the question selects, or None when it asks for a selection this check does not model."""
+    named = {name for name in truth if name.lower() in question.lower()}
+    threshold = _THRESHOLD.search(question)
+    remainder = _THRESHOLD.sub("", question)
+    if named and not threshold:
+        return named
+    if _SELECTION_NOT_MODELLED.search(remainder):
+        return None
+    if threshold:
+        test, limit = _COMPARE[threshold.group(1).lower()], int(threshold.group(2))
+        return {name for name, (count, _, _) in truth.items() if test(count, limit)}
+    return set(truth)
+
+
+def _verify_diversification(question: str, tree: exp.Select, shape: QueryShape, scope: _Scope, rows: Sequence[Sequence[Any]],
+                            source: SourceRecords) -> FinancialVerification:
+    truth = diversification_by_portfolio(source)
+    expected_names = _expected_selection(question, truth)
+    if expected_names is None or tree.args.get("limit") is not None:
+        return _not_verifiable("This question selects portfolios in a way the diversification check does not model.", rows=len(rows))
+    name_index = next((i for i, o in enumerate(shape.outputs) if "portfolios.portfolio_name" in o.base_columns and o.kind == "column"), None)
+    if name_index is None:
+        return _not_verifiable("The result has no portfolio name column to compare against the source records.", rows=len(rows))
+    returned = [row[name_index] for row in rows]
+    if len(set(returned)) != len(returned) or set(returned) != expected_names:
+        return FinancialVerification(status=VerificationStatus.VERIFICATION_FAILED, rows_checked=len(rows),
+                                     summary=f"The portfolios returned ({sorted(map(str, returned))}) are not those the source records select ({sorted(expected_names)}).")
+    if not rows:
+        return _not_verifiable("No portfolio meets the condition, and the source records agree; there is no figure to compare.")
+    figures: list[VerifiedFigure] = []
+    ratio_index, unmodelled = None, []
+    for index, output in enumerate(shape.outputs):
+        if output.kind not in ("aggregate", "calculated"):
+            continue
+        role = "ratio" if _find_ratio(tree.expressions[index].unalias(), scope)[0] is not None else _component_role(output.name)
+        if role is None:
+            unmodelled.append(output.name)
+            continue
+        ratio_index = index if role == "ratio" else ratio_index
+        worst = 0.0
+        for row in rows:
+            count, total, ratio = truth[row[name_index]]
+            expected = {"ratio": ratio, "sectors": float(count), "holdings": float(total)}[role]
+            if not _is_number(row[index]) or abs(row[index] - expected) > _NUMERIC_TOLERANCE:
+                return FinancialVerification(status=VerificationStatus.VERIFICATION_FAILED, rows_checked=len(rows), figures=figures,
+                                             summary=f"{row[name_index]}: {output.name} is {row[index]}; the source records give {expected}.")
+            worst = max(worst, abs(row[index] - expected))
+        label = {"ratio": "diversification ratio (distinct stock sectors / all holdings)", "sectors": "distinct stock sectors", "holdings": "all holdings, including bonds"}[role]
+        figures.append(VerifiedFigure(column=output.name, figure=label, outcome="reconciled", detail=f"{len(rows)} value(s) rebuilt from holding records.", max_difference=worst))
+    if ratio_index is None:
+        summary = "The result does not include the diversification ratio."
+        if _ASKS_RATIO.search(question):
+            return FinancialVerification(status=VerificationStatus.VERIFICATION_FAILED, rows_checked=len(rows), figures=figures, summary=summary)
+        return _not_verifiable(summary, figures, len(rows))
+    out_of_order = _order_contradicted(tree, shape, ratio_index, rows)
+    if out_of_order:
+        return FinancialVerification(status=VerificationStatus.VERIFICATION_FAILED, rows_checked=len(rows), figures=figures, summary=out_of_order)
+    if unmodelled:
+        return _not_verifiable(f"The diversification figures agree, but {', '.join(unmodelled)} could not be rebuilt.", figures, len(rows))
+    return FinancialVerification(status=VerificationStatus.INDEPENDENTLY_RECONCILED, rows_checked=len(rows), figures=figures,
+                                 summary=f"Selection and {len(figures)} figure(s) rebuilt from the holding records across {len(rows)} row(s); all agree.")
+
+
+def _order_contradicted(tree: exp.Select, shape: QueryShape, ratio_index: int, rows: Sequence[Sequence[Any]]) -> str | None:
+    order = tree.args.get("order")
+    if order is None or len(rows) < 2:
+        return None
+    first = order.expressions[0]
+    target = _strip(first.this)
+    if not isinstance(target, exp.Column) or target.name.lower() != shape.outputs[ratio_index].name.lower():
+        return None
+    values = [row[ratio_index] for row in rows]
+    descending = bool(first.args.get("desc"))
+    return None if values == sorted(values, reverse=descending) else "The rows are not in the order the query asks for."
 
 
 # --- portfolio reconciliation: the separate measurements of one portfolio, never merged -----------------------------------

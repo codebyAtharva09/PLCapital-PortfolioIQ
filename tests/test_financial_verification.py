@@ -174,9 +174,9 @@ def test_stored_values_only_are_result_validated_not_reconciled(verify, sql):
 
 
 @pytest.mark.parametrize("sql", [
-    "SELECT COUNT(*) FROM portfolios",
+    "SELECT COUNT(*) FROM transactions",
     "SELECT AVG(current_price) FROM securities",
-    f"SELECT p.portfolio_name, COUNT(DISTINCT s.sector_id) * 1.0 / COUNT(*) AS r {JOIN} GROUP BY p.portfolio_name",
+    "SELECT t.portfolio_id, COUNT(DISTINCT t.security_id) * 1.0 / COUNT(*) AS r FROM transactions t GROUP BY t.portfolio_id",
     "SELECT SUM(t.quantity * t.price) FROM transactions t",
     f"SELECT SUM({MV}) {JOIN} WHERE p.portfolio_id IN (SELECT portfolio_id FROM risk_metrics)",
     f"SELECT SUM({MV}) / 1000 AS k {JOIN}",
@@ -225,7 +225,7 @@ def test_recorded_production_answers_are_never_failed_and_known_figures_reconcil
     outcomes = {cid: verify(sql).status for cid, sql in drafts.items()}
     assert V.VERIFICATION_FAILED not in outcomes.values(), [c for c, s in outcomes.items() if s is V.VERIFICATION_FAILED]
     assert {outcomes[c] for c in ("Q4", "Q7", "U3")} == {V.INDEPENDENTLY_RECONCILED}
-    assert outcomes["Q1"] is V.NOT_INDEPENDENTLY_VERIFIABLE and outcomes["Q2"] is V.RESULT_VALIDATED
+    assert outcomes["Q1"] is V.INDEPENDENTLY_RECONCILED and outcomes["Q2"] is V.RESULT_VALIDATED  # Q1 is a count
 
 
 # --- through the SQL tool -------------------------------------------------------------------------------------------

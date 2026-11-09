@@ -26,6 +26,7 @@ import json
 import os
 import re
 import tempfile
+import random
 import time
 from dataclasses import dataclass
 from typing import Generic, Literal, Protocol, TypeVar
@@ -43,6 +44,10 @@ SDK_VERSION = genai.__version__
 SERVER_ERRORS = frozenset({500, 502, 503, 504})
 MAX_RETRY_WAIT_S = 60.0  # never sleep longer than this inside a request
 SERVER_RETRY_WAIT_S = 5.0
+RETRY_JITTER_S = 1.0  # so that concurrent sessions do not retry in step
+MAX_RESPONSE_CHARS = 64_000  # a structured answer here is a few hundred characters
+MAX_STRING_CHARS = 20_000
+MAX_ARRAY_ITEMS = 20
 _RETRY_IN = re.compile(r"retry in\s+(?:(\d+)h)?\s*(?:(\d+)m(?!s))?\s*(?:([\d.]+)s)?", re.I)
 
 
@@ -185,7 +190,7 @@ class GeminiLLM:
         path = self._cache_dir / f"{key}.json"
         try:
             saved = json.loads(path.read_text(encoding="utf-8"))
-            value = schema.model_validate_json(saved["raw_response"])
+            value = strict_value(saved["raw_response"], schema)
         except (OSError, ValueError, KeyError, ValidationError):
             return None  # no usable saved response: ask the API
         call = LLMCall(model=saved.get("model", self.model), model_version=saved.get("model_version"),
@@ -251,7 +256,7 @@ class GeminiLLM:
         if error.kind == "rate_limited" and error.retry_after_s is not None:
             return min(error.retry_after_s + 1.0, MAX_RETRY_WAIT_S)
         if error.kind == "unavailable":
-            return min(error.retry_after_s or SERVER_RETRY_WAIT_S, MAX_RETRY_WAIT_S)
+            return min((error.retry_after_s or SERVER_RETRY_WAIT_S) + random.uniform(0.0, RETRY_JITTER_S), MAX_RETRY_WAIT_S)
         return None  # daily quota, unknown rate-limit delay, client errors: stop
 
     def _pace(self) -> float:
@@ -292,15 +297,33 @@ def _raw_text(response) -> str | None:
     return parsed.model_dump_json() if isinstance(parsed, BaseModel) else None
 
 
+def strict_value(raw: str, schema: type[T]) -> T:
+    """Model output is untrusted: exactly the schema's keys, sensible sizes and no type coercion. Raises ValueError otherwise."""
+    if len(raw) > MAX_RESPONSE_CHARS:
+        raise ValueError("response too long")
+    data = json.loads(raw)
+    if not isinstance(data, dict) or set(data) - set(schema.model_fields):
+        raise ValueError("unexpected structure")
+
+    def sized(value) -> None:
+        if isinstance(value, str) and len(value) > MAX_STRING_CHARS or isinstance(value, list) and len(value) > MAX_ARRAY_ITEMS:
+            raise ValueError("oversized value")
+        for item in value if isinstance(value, list) else value.values() if isinstance(value, dict) else ():
+            sized(item)
+
+    sized(data)
+    return schema.model_validate_json(raw, strict=True)
+
+
 def _parse(response, raw: str | None, schema: type[T]) -> T:
     parsed = getattr(response, "parsed", None)
-    if isinstance(parsed, schema):
-        return parsed
     if raw:
         try:
-            return schema.model_validate_json(raw)
-        except ValidationError:
+            return strict_value(raw, schema)
+        except ValueError:  # includes pydantic's ValidationError and malformed JSON
             pass
+    elif isinstance(parsed, schema):
+        return parsed
     feedback = getattr(response, "prompt_feedback", None)
     if feedback is not None and getattr(feedback, "block_reason", None):
         raise LLMError("blocked", "Gemini declined to answer this request.")

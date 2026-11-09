@@ -232,7 +232,7 @@ def test_ask_demo_mode_replays_a_recorded_question_and_says_so():
     at = ask(view("ask").run(), "How many holdings does the Dividend Aristocrats Fund have?")
     assert not at.exception, [e.value for e in at.exception]
     text = html_text(at)
-    assert "DEMO / FIXTURE MODE" in text and "holding_count: 4" in text and "Not independently verifiable" in text
+    assert "DEMO / FIXTURE MODE" in text and "holding_count: 4" in text and "Independently reconciled" in text
     assert "Selected: SQL" in text
 
 

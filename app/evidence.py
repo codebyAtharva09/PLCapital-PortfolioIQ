@@ -57,6 +57,21 @@ def mode_selector(key: str, noun: str, recorded: int, cost: str) -> str:
     return mode
 
 
+MAX_LIVE_QUESTIONS_PER_SESSION = 15
+
+
+def live_allowance_used(mode: str) -> bool:
+    """True when this browser session has used its live questions. Demo mode is free; a live question can spend several requests."""
+    if mode != LIVE:
+        return False
+    used = st.session_state.get("live_questions", 0)
+    if used >= MAX_LIVE_QUESTIONS_PER_SESSION:
+        ui.callout("warning", "Live limit reached", f"This session has asked {MAX_LIVE_QUESTIONS_PER_SESSION} live questions. Use demo mode, or start a new session.")
+        return True
+    st.session_state["live_questions"] = used + 1
+    return False
+
+
 def is_duplicate(state_key: str, signature: tuple) -> bool:
     """True for a second submit that arrived while the same request was running, which would spend quota twice."""
     last = st.session_state.get(state_key)
@@ -179,7 +194,10 @@ def _trust_summary(receipt: FinancialAnswerReceipt) -> None:
                else financial.summary if financial is not None else f"{len(receipt.checks)} check(s); see below.")
     not_checked = ("Whether the supplied data is itself correct, and whether the question was read as you intended."
                    if receipt.status == "answered" else "Nothing was calculated, so there are no figures to check.")
-    ui.key_values([("What produced it", produced), ("What was checked", checked), ("What was not checked", not_checked)])
+    stages = receipt.assurance()
+    separately = (f"SQL execution: {stages['sql_execution']} · Result checks: {ui.STAMP_TEXT.get(stages['result_checks'], stages['result_checks'])} · "
+                  f"Independent verification: {ui.STAMP_TEXT.get(stages['independent_verification'], stages['independent_verification'])}")
+    ui.key_values([("What produced it", produced), ("What was checked", checked), ("What was not checked", not_checked), ("Each stage, separately", separately)])
 
 
 def _financial_verification(receipt: FinancialAnswerReceipt) -> None:
@@ -270,7 +288,7 @@ def _provenance(receipt: FinancialAnswerReceipt) -> None:
             ("Gemini requests", f"{model.api_requests} sent · {model.cache_hits} saved · {model.replayed_responses} replayed"),
             ("Tokens", f"prompt {model.prompt_tokens:,} · output {model.output_tokens:,} · thinking {model.thinking_tokens:,}"),
             ("Latency", " · ".join(f"{name} {ui.ms(value)}" for name, value in timings.stages() if value is not None)),
-            ("Answer basis", receipt.answer_basis), ("Receipt", f"{receipt.receipt_id} · {receipt.created_utc}"), ("Receipt fingerprint", receipt.fingerprint()[:16])]
+            ("Answer basis", receipt.answer_basis), ("Receipt", f"{receipt.receipt_id} · {receipt.created_utc}"), ("Receipt fingerprint (SHA-256; detects changes, not a signature)", receipt.fingerprint())]
     ui.key_values(rows)
 
 

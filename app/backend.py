@@ -27,7 +27,8 @@ from portfolioiq.financial_verification import PortfolioReconciliation, SourceRe
 from portfolioiq.invariants import IntegrityReport, open_for_checks, run_invariants
 from portfolioiq.replay import RecordedLLM
 from portfolioiq.sql_engine import data_fingerprint, ensure_reference_db, open_read_only, read_schema
-from portfolioiq.sql_guard import SqlValidation, validate_sql
+from portfolioiq.sql_generated_guard import validate_generated_sql
+from portfolioiq.sql_guard import SqlValidation
 from portfolioiq.sql_tool import SqlTool
 
 REPORTS = PROJECT_ROOT / "reports"
@@ -430,7 +431,7 @@ def _schema() -> dict[str, dict[str, str]]:
 
 def validate_only(sql: str) -> SqlValidation:
     """The production SQL guard on one statement. Nothing is executed."""
-    return validate_sql(sql, _schema())
+    return validate_generated_sql(sql, _schema())
 
 
 @st.cache_data(show_spinner=False)

@@ -168,11 +168,30 @@ class FinancialAnswerReceipt(BaseModel):
     data: DataBasis
     timings: Timings
 
-    def fingerprint(self) -> str:
-        """SHA-256 of what this answer says and rests on, leaving out ids, times and latencies, so identical answers match."""
+    def _material(self) -> dict:
+        """Everything the answer says and rests on. Ids, timestamps, latencies and tokens are left out, so identical answers match."""
         sql = self.sql
-        content = {"question": self.question, "route": self.route, "status": self.status, "answer": self.answer, "verification": self.verification.value,
-                   "sql": sql.sql if sql else None, "rows": sql.execution.rows if sql and sql.execution else None,
-                   "exposures": [e.model_dump(mode="json") for e in self.exposures], "data": self.data.data_fingerprint,
-                   "sql_prompt": self.data.sql_prompt_version, "router": self.data.router_version}
-        return hashlib.sha256(json.dumps(content, sort_keys=True, default=str).encode()).hexdigest()
+        return {"question": self.question, "route": self.route, "status": self.status, "answer": self.answer, "answer_basis": self.answer_basis,
+                "verification": self.verification.value, "checks": [c.model_dump(mode="json") for c in self.checks], "caveats": self.caveats,
+                "error_kind": self.error_kind, "sql": sql.sql if sql else None, "columns": sql.execution.columns if sql and sql.execution else None,
+                "rows": sql.execution.rows if sql and sql.execution else None,
+                "financial_verification": sql.financial_verification.model_dump(mode="json") if sql and sql.financial_verification else None,
+                "exposures": [e.model_dump(mode="json") for e in self.exposures], "data": self.data.model_dump(mode="json"),
+                "model": self.model.model, "model_version": self.model.model_version}
+
+    def fingerprint(self) -> str:
+        """SHA-256 of the receipt's material content. It detects a changed field; it is not a signature and proves no author."""
+        return hashlib.sha256(json.dumps(self._material(), sort_keys=True, default=str).encode()).hexdigest()
+
+    def assurance(self) -> dict[str, str]:
+        """Separate answers to separate questions. A query can run correctly and still be unverified."""
+        sql = self.sql
+        return {"sql_execution": sql.status if sql else "not run", "result_checks": self.verification.value,
+                "independent_verification": sql.financial_verification.status.value if sql and sql.financial_verification else
+                ("INDEPENDENTLY_RECONCILED" if self.exposures and all(e.verification.value == "INDEPENDENTLY_RECONCILED" for e in self.exposures) else "not applicable"),
+                "answer_text": "composed by code from tool results" if self.status in ("answered", "no_data") else "no figures stated"}
+
+
+def receipt_is_intact(payload: dict, stored_fingerprint: str) -> bool:
+    """True when a saved receipt still matches the fingerprint recorded for it."""
+    return FinancialAnswerReceipt.model_validate(payload).fingerprint() == stored_fingerprint
