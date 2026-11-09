@@ -1,0 +1,36 @@
+{
+  "created_utc": "2026-11-09T18:10:52+00:00",
+  "git_commit": "dd71c89bd32e5b5452f1498ba4bd18db27b9ab7b",
+  "working_tree_clean": true,
+  "model": "gemini-3.6-flash",
+  "thinking_level": "LOW",
+  "sql_prompt_variant": "candidate-2.3",
+  "router_version": "676786d09950",
+  "sql_prompt_version": "314e91c11435",
+  "context_version": "d5f1098033f7",
+  "file_sha256": {
+    "sql_guard": "3dab43637fd178a53175cef003dcccd4d0ced96832e6300ab5f1f6deca6d83bb",
+    "generated_sql_guard": "5670154711b3f39239f8fa282bb5d8e244c1668cdf3a45977f99c81f6be21812",
+    "sql_engine": "8d526f633424aa18f56aaa2de6d9e5956de7f11d815e78372f8be53393556da3",
+    "router": "a62932fc86ee144bad29e10bf706a722cb61f68742ef985d3931e2d1c88956c7",
+    "comparator": "6675beebe73dfda60fd98a15c7a0c5209771f4c7d424cfe5776fc50a495967d2",
+    "official_evaluator": "eb4d6054a4ab2008d9ed442af29f15f1e840df6c80149099e0fcd6243f81f882",
+    "sql_evaluator": "e397e4035180cf8996433ab01ac85d149ed4cb9551587b8587f1a50ad4f03b1d"
+  },
+  "dataset_sha256": "1d53890ce41f713c99d3acfa67439706cc304a3bd4c43a611198d8b5df671ee3",
+  "question_set_sha256": {
+    "evaluation/ground_truth_dataset.json": "7a5c9e4ea18f973d047d31aece044a84a179010e53ca06a6fb65f00ae0343244",
+    "evaluation/unseen_sql_questions.json": "37ca1e114274bbc221859746efb5e55295ca63d04195389b69dba5065f609609"
+  },
+  "python": "3.13.4",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "packages": {
+    "google-genai": "2.34.0",
+    "pydantic": "2.14.3",
+    "sqlglot": "30.30.0",
+    "streamlit": "1.67.0",
+    "pandas": "3.1.1",
+    "httpx": "0.28.1",
+    "pytest": "9.2.0"
+  }
+}
