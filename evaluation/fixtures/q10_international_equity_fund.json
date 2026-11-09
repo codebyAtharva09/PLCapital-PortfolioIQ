@@ -1,0 +1,26 @@
+{
+  "question_id": 10,
+  "tool": "exposure_calculator",
+  "portfolio_name": "International Equity Fund",
+  "portfolio_phrase": "international equity",
+  "source": "Hand-derived from data/holdings.csv (portfolio_id 7), data/securities.csv and data/sectors.csv. Independent of the code in src/portfolioiq.",
+  "holdings": [
+    {"symbol": "AAPL", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.08},
+    {"symbol": "MSFT", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.06},
+    {"symbol": "GOOGL", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.12},
+    {"symbol": "AVGO", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.10},
+    {"symbol": "TSLA", "asset_type": "Stock", "sector": "Automotive", "current_weight": 0.15},
+    {"symbol": "XOM", "asset_type": "Stock", "sector": "Energy", "current_weight": 0.18},
+    {"symbol": "CVX", "asset_type": "Stock", "sector": "Energy", "current_weight": 0.20},
+    {"symbol": "HD", "asset_type": "Stock", "sector": "Consumer Staples", "current_weight": 0.11}
+  ],
+  "derivation": "Energy = 0.18 (XOM) + 0.20 (CVX) = 0.38. Technology = 0.08 (AAPL) + 0.06 (MSFT) + 0.12 (GOOGL) + 0.10 (AVGO) = 0.36. Automotive = 0.15 (TSLA). Consumer Staples = 0.11 (HD, classified as Consumer Staples in the supplied data). Total 1.00, no bonds, residual 0, so Method B equals Method A. The phrase 'international equity' resolves to International Equity Fund by rule B5.1.",
+  "expected": {
+    "eligible_stock_weight": 1.0,
+    "bond_weight": 0.0,
+    "total_weight": 1.0,
+    "residual": 0.0,
+    "method_a": {"Energy": 0.38, "Technology": 0.36, "Automotive": 0.15, "Consumer Staples": 0.11},
+    "method_b": {"Energy": 0.38, "Technology": 0.36, "Automotive": 0.15, "Consumer Staples": 0.11}
+  }
+}

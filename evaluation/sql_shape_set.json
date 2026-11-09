@@ -1,0 +1,474 @@
+{
+ "description": "Frozen SQL result-shape set for the candidate SQL configurations (17 questions). Written on 2026-11-09 after the Candidate v2.1 failure analysis, to measure the failure classes it exposed (extra or missing output columns, a table-wide instead of a per-entity latest value, the population of 'for each'), and without sight of any v2.2 or v2.3 output. It contains no official, unseen (U) or independent benchmark (D/V/T) question and none of the few-shot examples shown to the model. It is NOT a blind set: the failure classes were known when it was written. Every reference result was executed on the reference database and independently recomputed with pandas from the supplied CSV files; the two agree. Scored strictly with the unchanged official comparator; relaxed matches are reported separately. Never read by runtime code and never copied into a prompt.",
+ "frozen": "2026-11-09",
+ "cases": [
+  {
+   "id": "S01",
+   "category": "Scalar aggregate; join and filter columns are not output",
+   "question": "What is the highest beta recorded for the Growth Equity Fund?",
+   "reference_sql": "SELECT MAX(r.beta) FROM risk_metrics r JOIN portfolios p ON p.portfolio_id = r.portfolio_id WHERE p.portfolio_name = 'Growth Equity Fund';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "max_beta"
+    ],
+    "rows": [
+     [
+      1.23
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S02",
+   "category": "Latest date per entity (not the table-wide maximum)",
+   "question": "What is the date of the most recent transaction in the Growth Equity Fund?",
+   "reference_sql": "SELECT MAX(t.transaction_date) FROM transactions t JOIN portfolios p ON p.portfolio_id = t.portfolio_id WHERE p.portfolio_name = 'Growth Equity Fund';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "latest_transaction_date"
+    ],
+    "rows": [
+     [
+      "2023-10-03"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S03",
+   "category": "Latest value per entity, value only",
+   "question": "What is the most recent tracking error for the Balanced Portfolio?",
+   "reference_sql": "SELECT r.tracking_error FROM risk_metrics r JOIN portfolios p ON p.portfolio_id = r.portfolio_id WHERE p.portfolio_name = 'Balanced Portfolio' ORDER BY r.calculation_date DESC LIMIT 1;",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "tracking_error"
+    ],
+    "rows": [
+     [
+      2.3
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S04",
+   "category": "Scalar aggregate over a three-table join",
+   "question": "What is the total cost basis of the Energy holdings across all portfolios?",
+   "reference_sql": "SELECT SUM(h.cost_basis) FROM holdings h JOIN securities s ON s.security_id = h.security_id JOIN sectors sec ON sec.sector_id = s.sector_id WHERE sec.sector_name = 'Energy';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "total_cost_basis"
+    ],
+    "rows": [
+     [
+      992200.0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S05",
+   "category": "Top-1 with the requested attributes named",
+   "question": "Give the symbol and current price of the most expensive bond.",
+   "reference_sql": "SELECT symbol, current_price FROM securities WHERE asset_type = 'Bond' ORDER BY current_price DESC LIMIT 1;",
+   "ordered": true,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "symbol",
+     "current_price"
+    ],
+    "rows": [
+     [
+      "UST-10Y",
+      102.5
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S06",
+   "category": "Attribute list; filter column is not output",
+   "question": "List the name and creation date of every active portfolio.",
+   "reference_sql": "SELECT portfolio_name, creation_date FROM portfolios WHERE status = 'Active';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "portfolio_name",
+     "creation_date"
+    ],
+    "rows": [
+     [
+      "Growth Equity Fund",
+      "2023-01-15"
+     ],
+     [
+      "Conservative Income Fund",
+      "2023-02-01"
+     ],
+     [
+      "Tech Innovation Fund",
+      "2023-01-20"
+     ],
+     [
+      "Balanced Portfolio",
+      "2023-03-01"
+     ],
+     [
+      "ESG Sustainable Fund",
+      "2023-03-15"
+     ],
+     [
+      "Small Cap Value Fund",
+      "2023-04-01"
+     ],
+     [
+      "International Equity Fund",
+      "2023-04-15"
+     ],
+     [
+      "Fixed Income Plus",
+      "2023-05-01"
+     ],
+     [
+      "Dividend Aristocrats Fund",
+      "2023-05-15"
+     ],
+     [
+      "Emerging Markets Fund",
+      "2023-06-01"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S07",
+   "category": "Holdings record listing with no columns named (the convention used by official Q5)",
+   "question": "Show me the top 3 holdings by quantity in the Small Cap Value Fund.",
+   "reference_sql": "SELECT h.holding_id, s.symbol, s.company_name, h.quantity FROM holdings h JOIN securities s ON s.security_id = h.security_id JOIN portfolios p ON p.portfolio_id = h.portfolio_id WHERE p.portfolio_name = 'Small Cap Value Fund' ORDER BY h.quantity DESC LIMIT 3;",
+   "ordered": true,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "holding_id",
+     "symbol",
+     "company_name",
+     "quantity"
+    ],
+    "rows": [
+     [
+      39,
+      "PFE",
+      "Pfizer Inc.",
+      3000.0
+     ],
+     [
+      40,
+      "BAC",
+      "Bank of America Corp.",
+      1500.0
+     ],
+     [
+      41,
+      "ABBV",
+      "AbbVie Inc.",
+      800.0
+     ]
+    ]
+   },
+   "convention": "Same reference convention as official Q5: a holdings listing returns the holding's identity (holding_id, symbol, company_name), its quantity, and the measure the list is ranked by when that is not the quantity. Q5 ranks by cost_basis, so it carries cost_basis; this question ranks by quantity, which is already returned."
+  },
+  {
+   "id": "S08",
+   "category": "Attribute list, one named attribute (convention used by unseen U4: symbol identifies a security)",
+   "question": "List each Financials stock with its listing date.",
+   "reference_sql": "SELECT s.symbol, s.listing_date FROM securities s JOIN sectors sec ON sec.sector_id = s.sector_id WHERE sec.sector_name = 'Financials' AND s.asset_type = 'Stock';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "symbol",
+     "listing_date"
+    ],
+    "rows": [
+     [
+      "JPM",
+      "1971-01-01"
+     ],
+     [
+      "V",
+      "2008-03-19"
+     ],
+     [
+      "MA",
+      "2006-05-25"
+     ],
+     [
+      "BAC",
+      "1972-01-01"
+     ]
+    ]
+   },
+   "convention": "Same reference convention as unseen U4: a security is identified by symbol, without company_name."
+  },
+  {
+   "id": "S09",
+   "category": "Group count: the group key and the count",
+   "question": "How many portfolios are there for each status?",
+   "reference_sql": "SELECT status, COUNT(*) FROM portfolios GROUP BY status;",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "status",
+     "portfolio_count"
+    ],
+    "rows": [
+     [
+      "Active",
+      10
+     ],
+     [
+      "Passive",
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S10",
+   "category": "Group sum: the group key and the sum",
+   "question": "What is the total stated AUM of the portfolios at each target risk level?",
+   "reference_sql": "SELECT target_risk_level, SUM(total_aum) FROM portfolios GROUP BY target_risk_level;",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "target_risk_level",
+     "total_aum"
+    ],
+    "rows": [
+     [
+      "High",
+      85000000.0
+     ],
+     [
+      "Low",
+      103500000.0
+     ],
+     [
+      "Medium",
+      135000000.0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S11",
+   "category": "Share of a total: one percentage",
+   "question": "What percentage of all securities are bonds?",
+   "reference_sql": "SELECT 100.0 * SUM(CASE WHEN asset_type = 'Bond' THEN 1 ELSE 0 END) / COUNT(*) FROM securities;",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "bond_percentage"
+    ],
+    "rows": [
+     [
+      16.666666666666668
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S12",
+   "category": "Rank and take the top row; the single requested attribute only",
+   "question": "Which sector has the highest total market cap among its stocks? Give the sector name.",
+   "reference_sql": "SELECT sec.sector_name FROM securities s JOIN sectors sec ON sec.sector_id = s.sector_id WHERE s.asset_type = 'Stock' GROUP BY sec.sector_name ORDER BY SUM(s.market_cap) DESC LIMIT 1;",
+   "ordered": true,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "sector_name"
+    ],
+    "rows": [
+     [
+      "Technology"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S13",
+   "category": "Distinct entity names through a join; the join columns are not output",
+   "question": "List the names of the portfolios that hold at least one bond.",
+   "reference_sql": "SELECT DISTINCT p.portfolio_name FROM portfolios p JOIN holdings h ON h.portfolio_id = p.portfolio_id JOIN securities s ON s.security_id = h.security_id WHERE s.asset_type = 'Bond';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "portfolio_name"
+    ],
+    "rows": [
+     [
+      "Conservative Income Fund"
+     ],
+     [
+      "Balanced Portfolio"
+     ],
+     [
+      "Fixed Income Plus"
+     ],
+     [
+      "Total Bond Market Index Fund"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S14",
+   "category": "Requested attribute named, filter on a portfolio name",
+   "question": "Which securities are held in the Emerging Markets Fund? Give their symbols.",
+   "reference_sql": "SELECT s.symbol FROM holdings h JOIN securities s ON s.security_id = h.security_id JOIN portfolios p ON p.portfolio_id = h.portfolio_id WHERE p.portfolio_name = 'Emerging Markets Fund';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "symbol"
+    ],
+    "rows": [
+     [
+      "GOOGL"
+     ],
+     [
+      "AMZN"
+     ],
+     [
+      "TSLA"
+     ],
+     [
+      "NVDA"
+     ],
+     [
+      "AVGO"
+     ],
+     [
+      "CRM"
+     ],
+     [
+      "XOM"
+     ],
+     [
+      "CVX"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S15",
+   "category": "Count with a date-year filter; only the count",
+   "question": "How many transactions did the Tech Innovation Fund make in 2023?",
+   "reference_sql": "SELECT COUNT(*) FROM transactions t JOIN portfolios p ON p.portfolio_id = t.portfolio_id WHERE p.portfolio_name = 'Tech Innovation Fund' AND t.transaction_date BETWEEN '2023-01-01' AND '2023-12-31';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "transaction_count"
+    ],
+    "rows": [
+     [
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S16",
+   "category": "Average of one attribute for a sector",
+   "question": "What is the average current price of the Healthcare stocks?",
+   "reference_sql": "SELECT AVG(s.current_price) FROM securities s JOIN sectors sec ON sec.sector_id = s.sector_id WHERE sec.sector_name = 'Healthcare' AND s.asset_type = 'Stock';",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "average_current_price"
+    ],
+    "rows": [
+     [
+      285.17
+     ]
+    ]
+   }
+  },
+  {
+   "id": "S17",
+   "category": "Per-entity share of a total (population rule: sectors that have securities, as official Q7)",
+   "question": "For each sector, show the number of securities and what percentage of all securities it represents.",
+   "reference_sql": "SELECT sec.sector_name, COUNT(*) AS security_count, 100.0 * COUNT(*) / (SELECT COUNT(*) FROM securities) AS percentage FROM securities s JOIN sectors sec ON sec.sector_id = s.sector_id GROUP BY sec.sector_name;",
+   "ordered": false,
+   "accept": "strict",
+   "expected": {
+    "columns": [
+     "sector_name",
+     "security_count",
+     "percentage"
+    ],
+    "rows": [
+     [
+      "Automotive",
+      1,
+      3.3333333333333335
+     ],
+     [
+      "Consumer Discretionary",
+      1,
+      3.3333333333333335
+     ],
+     [
+      "Consumer Staples",
+      4,
+      13.333333333333334
+     ],
+     [
+      "Energy",
+      2,
+      6.666666666666667
+     ],
+     [
+      "Financials",
+      4,
+      13.333333333333334
+     ],
+     [
+      "Healthcare",
+      5,
+      16.666666666666668
+     ],
+     [
+      "Technology",
+      8,
+      26.666666666666668
+     ]
+    ]
+   },
+   "convention": "Population follows official Q7: only sectors that have matching securities are listed."
+  }
+ ],
+ "revisions": [
+  {
+   "date": "2026-11-09",
+   "case": "S07",
+   "change": "reference corrected before any model answer was recorded: the first reference also returned cost_basis, which is not the ranked measure under Q5's convention. Found by an offline check of the reference SQL against the v2.3 shape policy; the corrected form follows Q5's convention as stated above."
+  }
+ ]
+}

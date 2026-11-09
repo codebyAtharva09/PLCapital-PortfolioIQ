@@ -1,0 +1,26 @@
+{
+  "description": "M4 live integration check: one question per agent route, with the expected behaviour fixed before any live run. Read only by the evaluator and tests, never at runtime. A1 reuses unseen question U2's wording, so its SQL step can reuse the saved SQL draft; A2 is assessment question Q9; A3 and A4 are reliability-benchmark scenarios 5 and 1.",
+  "questions": [
+    {
+      "id": "A1",
+      "question": "How many holdings does the Dividend Aristocrats Fund have?",
+      "expect": {"route": "sql", "status": "answered", "rows": [[4]]}
+    },
+    {
+      "id": "A2",
+      "question": "What are the sector exposures for the Tech Innovation Fund?",
+      "expect": {"route": "exposure", "status": "answered", "portfolio": "Tech Innovation Fund"}
+    },
+    {
+      "id": "A3",
+      "question": "Sector exposure for the international portfolio",
+      "expect": {"route": "exposure", "status": "needs_clarification",
+                 "candidates": ["International Equity Fund", "Total International Index Fund"]}
+    },
+    {
+      "id": "A4",
+      "question": "Which high-risk portfolio has the largest Technology exposure?",
+      "expect": {"route": "exposure_for_sql_results", "status": "answered", "leader": "Tech Innovation Fund"}
+    }
+  ]
+}

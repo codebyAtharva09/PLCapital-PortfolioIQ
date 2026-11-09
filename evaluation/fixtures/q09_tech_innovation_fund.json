@@ -1,0 +1,25 @@
+{
+  "question_id": 9,
+  "tool": "exposure_calculator",
+  "portfolio_name": "Tech Innovation Fund",
+  "source": "Hand-derived from data/holdings.csv (portfolio_id 3), data/securities.csv and data/sectors.csv. Independent of the code in src/portfolioiq.",
+  "holdings": [
+    {"symbol": "AAPL", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.15},
+    {"symbol": "MSFT", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.18},
+    {"symbol": "GOOGL", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.12},
+    {"symbol": "NVDA", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.15},
+    {"symbol": "AVGO", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.08},
+    {"symbol": "CRM", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.12},
+    {"symbol": "ORCL", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.10},
+    {"symbol": "META", "asset_type": "Stock", "sector": "Technology", "current_weight": 0.10}
+  ],
+  "derivation": "Technology = 0.15 + 0.18 + 0.12 + 0.15 + 0.08 + 0.12 + 0.10 + 0.10 = 1.00. No bonds and weights total 1.00, so the residual is 0 and Method B equals Method A.",
+  "expected": {
+    "eligible_stock_weight": 1.0,
+    "bond_weight": 0.0,
+    "total_weight": 1.0,
+    "residual": 0.0,
+    "method_a": {"Technology": 1.0},
+    "method_b": {"Technology": 1.0}
+  }
+}

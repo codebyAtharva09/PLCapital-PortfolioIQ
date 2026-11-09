@@ -1,0 +1,36 @@
+{
+  "purpose": "Records the SQL security hardening made after the frozen baseline. The historical hashes in baseline_configuration.json are not rewritten.",
+  "changes": [
+    "SQLite resource limits on every read-only connection",
+    "Bounded total result size",
+    "Virtual-machine step budget beside the time limit",
+    "Table-scoped column validation through aliases, joins, CTEs and subqueries"
+  ],
+  "limits": {
+    "max_result_bytes": 2000000,
+    "max_vm_steps": 50000000,
+    "sqlite": {
+      "0": 1000000,
+      "1": 100000,
+      "2": 200,
+      "3": 100,
+      "4": 20,
+      "5": 200000,
+      "6": 32,
+      "7": 0,
+      "8": 1000,
+      "9": 32,
+      "10": 1
+    }
+  },
+  "files": {
+    "src/portfolioiq/sql_engine.py": {
+      "baseline_sha256": "42802fe88da3fd3b34a48ae5804e178d3c9d1b5c6065342d777aba05c283f411",
+      "sha256": "8d526f633424aa18f56aaa2de6d9e5956de7f11d815e78372f8be53393556da3"
+    },
+    "src/portfolioiq/sql_guard.py": {
+      "baseline_sha256": "996ef8b5316f8b500a41c09df3e016eae45c56bc5e30649f4042b89481e87170",
+      "sha256": "3dab43637fd178a53175cef003dcccd4d0ced96832e6300ab5f1f6deca6d83bb"
+    }
+  }
+}
