@@ -1,0 +1,35 @@
+{
+  "started_utc": "2026-11-09T08:00:25+00:00",
+  "model": "gemini-3.6-flash",
+  "thinking_level": "LOW",
+  "min_interval_s": 13.0,
+  "request_cap": 20,
+  "context_version": "d5f1098033f7",
+  "sql_prompt_version": "314e91c11435",
+  "sql_prompt_variant": "candidate-2.3",
+  "router_version": "676786d09950",
+  "db_sha256_before": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857",
+  "skipped": [],
+  "attempted": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09",
+    "T10",
+    "T11",
+    "T12"
+  ],
+  "stopped": {
+    "case": "T12",
+    "kind": "budget_exhausted",
+    "message": "The request budget is used up: 20 of 20 API requests sent, so no further request was sent."
+  },
+  "finished_utc": "2026-11-09T08:04:34+00:00",
+  "requests_sent": 20,
+  "db_sha256_after": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857"
+}

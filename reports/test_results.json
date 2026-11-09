@@ -1,0 +1,52 @@
+{
+  "recorded_utc": "2026-11-09T12:22:48+00:00",
+  "python": "3.13.4",
+  "total": 910,
+  "passed": 910,
+  "failed": 0,
+  "skipped": 0,
+  "categories": [
+    {
+      "category": "Security",
+      "passed": 98,
+      "failed": 0,
+      "skipped": 0,
+      "files": 5
+    },
+    {
+      "category": "Independent verification",
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "files": 1
+    },
+    {
+      "category": "Data integrity",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0,
+      "files": 3
+    },
+    {
+      "category": "Regression and evaluation",
+      "passed": 328,
+      "failed": 0,
+      "skipped": 0,
+      "files": 14
+    },
+    {
+      "category": "Integration",
+      "passed": 164,
+      "failed": 0,
+      "skipped": 0,
+      "files": 8
+    },
+    {
+      "category": "Unit",
+      "passed": 254,
+      "failed": 0,
+      "skipped": 0,
+      "files": 10
+    }
+  ]
+}

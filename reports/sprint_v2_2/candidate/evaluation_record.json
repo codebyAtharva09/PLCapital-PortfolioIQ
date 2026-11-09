@@ -1,0 +1,88 @@
+{
+  "label": "Candidate v2.2 (failed the official gate)",
+  "note": "Live, Gemini 3.6 Flash, 9 November 2026. Official 9/10: Q8 regressed. Stopped there; only U5 was evaluated on the unseen set (U10 hit a 503). Kept as a failed experiment.",
+  "production_baseline": {
+    "sql_prompt_version": "d5a914eb71d5",
+    "official_end_to_end": "8/10",
+    "record": "reports/sprint_v2_1/baseline/ and reports/runs/"
+  },
+  "candidate": {
+    "variant": "candidate-2.2",
+    "sql_prompt_version": "2ef54d48d231",
+    "instruction_sha256": "74bcc4da4acc884a3e3d1d9fae8aa8e8c4977d9e33acea605f9221688fbef3f6",
+    "context_version": "d5f1098033f7",
+    "shape_policy": "2.2"
+  },
+  "model": "gemini-3.6-flash",
+  "thinking_level": "LOW",
+  "dataset_fingerprint": "c4cd3a08fa94103d69538cefdb00e251f0b03b56d6ead7e5d609b41bc88756c6",
+  "evaluator_sha256": {
+    "src/portfolioiq_eval/comparator.py": "6675beebe73dfda60fd98a15c7a0c5209771f4c7d424cfe5776fc50a495967d2",
+    "src/portfolioiq_eval/official.py": "eb4d6054a4ab2008d9ed442af29f15f1e840df6c80149099e0fcd6243f81f882",
+    "src/portfolioiq_eval/sql_eval.py": "107a2cb10854239f91dde0ab80e4b39089ba3af26298261cdbb606980b940aaa",
+    "evaluation/ground_truth_dataset.json": "7a5c9e4ea18f973d047d31aece044a84a179010e53ca06a6fb65f00ae0343244",
+    "evaluation/unseen_sql_questions.json": "37ca1e114274bbc221859746efb5e55295ca63d04195389b69dba5065f609609"
+  },
+  "first_request_utc": "2026-11-09T07:15:31+00:00",
+  "last_request_utc": "2026-11-09T07:20:25+00:00",
+  "runs": 2,
+  "api": {
+    "requests": 10,
+    "succeeded": 9,
+    "failed": [
+      "U10 sql_tool draft 1: 503 UNAVAILABLE"
+    ],
+    "cache_hits": 10,
+    "prompt_tokens": 31395,
+    "output_tokens": 1115,
+    "thinking_tokens": 2285,
+    "latency_ms": {
+      "median": 3326.7,
+      "max": 5436.999
+    }
+  },
+  "official_agent": {
+    "Q1": "PASS",
+    "Q2": "PASS",
+    "Q3": "PASS",
+    "Q4": "PASS",
+    "Q5": "PASS",
+    "Q6": "PASS",
+    "Q7": "PASS",
+    "Q8": "FAIL",
+    "Q9": "PASS",
+    "Q10": "PASS"
+  },
+  "official_summary": {
+    "PASS": 9,
+    "FAIL": 1,
+    "REFUSED": 0,
+    "NOT EVALUATED": 0,
+    "routing_correct": 10,
+    "routing_evaluated": 10,
+    "total": 10
+  },
+  "sql_tool": {
+    "Q1": "NOT EVALUATED",
+    "Q2": "NOT EVALUATED",
+    "Q3": "NOT EVALUATED",
+    "Q4": "NOT EVALUATED",
+    "Q5": "NOT EVALUATED",
+    "Q6": "NOT EVALUATED",
+    "Q7": "NOT EVALUATED",
+    "Q8": "NOT EVALUATED",
+    "U1": "NOT EVALUATED",
+    "U2": "NOT EVALUATED",
+    "U3": "NOT EVALUATED",
+    "U4": "NOT EVALUATED",
+    "U5": "PASS",
+    "U6": "NOT EVALUATED",
+    "U7": "NOT EVALUATED",
+    "U8": "NOT EVALUATED",
+    "U9": "NOT EVALUATED",
+    "U10": "NOT EVALUATED",
+    "S1": "NOT EVALUATED",
+    "S2": "NOT EVALUATED",
+    "S3": "NOT EVALUATED"
+  }
+}

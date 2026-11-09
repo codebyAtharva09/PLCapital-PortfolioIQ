@@ -1,0 +1,107 @@
+{
+  "summary": {
+    "as_expected": 2,
+    "unexpected": 0,
+    "evaluated": 2,
+    "total": 4,
+    "verdicts": {
+      "PASS": 2,
+      "FAIL": 0,
+      "REFUSED": 0,
+      "NOT EVALUATED": 2
+    },
+    "api_errors": 0,
+    "api_requests": 2,
+    "cache_hits": 1
+  },
+  "items": [
+    {
+      "id": "A1",
+      "question": "How many holdings does the Dividend Aristocrats Fund have?",
+      "outcome": "not_evaluated",
+      "verdict": "NOT EVALUATED",
+      "problems": [],
+      "explanation": "Not evaluated: no live run has asked this question yet."
+    },
+    {
+      "id": "A2",
+      "question": "What are the sector exposures for the Tech Innovation Fund?",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure, answered). Tech Innovation Fund: 1 sector(s) across an eligible stock weight of 100.00% of the portfolio. Largest sector: Technology, 100.00% of the portfolio (Method A) and 100.00% of the equity sleeve (Method B).",
+      "run": "agent-20261107-204637",
+      "route": "exposure",
+      "status": "answered",
+      "answer": "Tech Innovation Fund: 1 sector(s) across an eligible stock weight of 100.00% of the portfolio. Largest sector: Technology, 100.00% of the portfolio (Method A) and 100.00% of the equity sleeve (Method B).",
+      "verification": "INDEPENDENTLY_RECONCILED",
+      "api_error": null,
+      "model": "gemini-3.5-flash-lite",
+      "model_version": "gemini-3.5-flash-lite",
+      "router_version": "676786d09950",
+      "sql_prompt_version": null,
+      "api_requests": 0,
+      "cache_hits": 1,
+      "llm_ms": 0.0,
+      "total_ms": 26.0,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "thinking_tokens": 0,
+      "total_tokens": 0,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "b33c939c88c784a4",
+          "source": "cache"
+        }
+      ],
+      "raw_response": "reports/supplemental/gemini-3.5-flash-lite/api_usage.jsonl: step 1 router b33c939c88c784a4 (cache)",
+      "receipt_id": "57f56d5346644eebbcf56f2c24b3ca6d"
+    },
+    {
+      "id": "A3",
+      "question": "Sector exposure for the international portfolio",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure, needs_clarification). 'international portfolio' is a generic description, so it cannot select a portfolio on its own. Which portfolio do you mean?",
+      "run": "agent-20261107-204637",
+      "route": "exposure",
+      "status": "needs_clarification",
+      "answer": "'international portfolio' is a generic description, so it cannot select a portfolio on its own. Which portfolio do you mean?",
+      "verification": "VERIFICATION_UNAVAILABLE",
+      "api_error": null,
+      "model": "gemini-3.5-flash-lite",
+      "model_version": "gemini-3.5-flash-lite",
+      "router_version": "676786d09950",
+      "sql_prompt_version": null,
+      "api_requests": 2,
+      "cache_hits": 0,
+      "llm_ms": 3306.5,
+      "total_ms": 16317.9,
+      "prompt_tokens": 710,
+      "output_tokens": 79,
+      "thinking_tokens": 0,
+      "total_tokens": 789,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "8fd45f8251653ffb",
+          "source": "api"
+        }
+      ],
+      "raw_response": "reports/supplemental/gemini-3.5-flash-lite/api_usage.jsonl: step 1 router 8fd45f8251653ffb (api)",
+      "receipt_id": "cb30cc9c995f479fbed81c8ebf78d685"
+    },
+    {
+      "id": "A4",
+      "question": "Which high-risk portfolio has the largest Technology exposure?",
+      "outcome": "not_evaluated",
+      "verdict": "NOT EVALUATED",
+      "problems": [],
+      "explanation": "Not evaluated: no live run has asked this question yet."
+    }
+  ]
+}

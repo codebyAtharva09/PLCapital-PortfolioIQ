@@ -1,0 +1,266 @@
+[
+ {
+  "id": "T01",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": "SELECT creation_date FROM portfolios WHERE portfolio_name = 'Tech Innovation Fund';",
+  "columns": [
+   "creation_date"
+  ],
+  "rows": [
+   [
+    "2023-01-20"
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T02",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": "SELECT s.company_name FROM securities s JOIN sectors sec ON sec.sector_id = s.sector_id WHERE sec.sector_name = 'Consumer Staples' AND s.asset_type = 'Stock';",
+  "columns": [
+   "company_name"
+  ],
+  "rows": [
+   [
+    "Procter & Gamble Co."
+   ],
+   [
+    "Home Depot Inc."
+   ],
+   [
+    "Coca-Cola Company"
+   ],
+   [
+    "Walmart Inc."
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T03",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": "SELECT SUM(h.quantity) AS total_quantity FROM holdings h JOIN securities s ON s.security_id = h.security_id WHERE s.symbol = 'MSFT';",
+  "columns": [
+   "total_quantity"
+  ],
+  "rows": [
+   [
+    5100.0
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T04",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": "SELECT DISTINCT sec.sector_name FROM holdings h JOIN portfolios p ON p.portfolio_id = h.portfolio_id JOIN securities s ON s.security_id = h.security_id JOIN sectors sec ON sec.sector_id = s.sector_id WHERE p.portfolio_name = 'Balanced Portfolio' AND s.asset_type = 'Stock'",
+  "columns": [
+   "sector_name"
+  ],
+  "rows": [
+   [
+    "Technology"
+   ],
+   [
+    "Financials"
+   ],
+   [
+    "Healthcare"
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T05",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": "SELECT portfolio_name FROM portfolios WHERE target_risk_level = 'High' ORDER BY total_aum DESC LIMIT 1;",
+  "columns": [
+   "portfolio_name"
+  ],
+  "rows": [
+   [
+    "Tech Innovation Fund"
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T06",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": "SELECT COUNT(*) FROM transactions WHERE transaction_date BETWEEN '2023-10-02' AND '2023-10-08';",
+  "columns": [
+   "COUNT(*)"
+  ],
+  "rows": [
+   [
+    10
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T07",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": "SELECT p.portfolio_name, pp.performance_date, pp.sharpe_ratio FROM portfolio_performance pp JOIN portfolios p ON p.portfolio_id = pp.portfolio_id ORDER BY pp.sharpe_ratio DESC LIMIT 1",
+  "columns": [
+   "portfolio_name",
+   "performance_date",
+   "sharpe_ratio"
+  ],
+  "rows": [
+   [
+    "Balanced Portfolio",
+    "2023-10-09",
+    2.16
+   ]
+  ],
+  "requests": 3,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T08",
+  "verdict": "PASS",
+  "strict": null,
+  "sql": null,
+  "columns": null,
+  "rows": null,
+  "requests": 1,
+  "attempts": 0,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T09",
+  "verdict": "PASS",
+  "strict": null,
+  "sql": null,
+  "columns": null,
+  "rows": null,
+  "requests": 1,
+  "attempts": 0,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T10",
+  "verdict": "PASS",
+  "strict": null,
+  "sql": "SELECT p.portfolio_name FROM portfolios p JOIN holdings h ON p.portfolio_id = h.portfolio_id GROUP BY p.portfolio_id, p.portfolio_name HAVING COUNT(h.holding_id) >= 10;",
+  "columns": [
+   "portfolio_name"
+  ],
+  "rows": [
+   [
+    "Total International Index Fund"
+   ],
+   [
+    "Total Stock Market Index Fund"
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T11",
+  "verdict": "PASS",
+  "strict": true,
+  "sql": null,
+  "columns": null,
+  "rows": null,
+  "requests": 1,
+  "attempts": 0,
+  "run": "independent-test-20261109-133024"
+ },
+ {
+  "id": "T12",
+  "verdict": "PASS",
+  "strict": null,
+  "sql": null,
+  "columns": null,
+  "rows": null,
+  "requests": 1,
+  "attempts": 0,
+  "run": "independent-test-20261109-133452"
+ },
+ {
+  "id": "T13",
+  "verdict": "REFUSED",
+  "strict": null,
+  "sql": null,
+  "columns": null,
+  "rows": null,
+  "requests": 0,
+  "attempts": 0,
+  "run": "independent-test-20261109-133452"
+ },
+ {
+  "id": "T14",
+  "verdict": "REFUSED",
+  "strict": null,
+  "sql": null,
+  "columns": null,
+  "rows": null,
+  "requests": 1,
+  "attempts": 0,
+  "run": "independent-test-20261109-133452"
+ },
+ {
+  "id": "T15",
+  "verdict": "REFUSED",
+  "strict": null,
+  "sql": null,
+  "columns": null,
+  "rows": null,
+  "requests": 1,
+  "attempts": 0,
+  "run": "independent-test-20261109-133452"
+ },
+ {
+  "id": "T16",
+  "verdict": "PASS",
+  "strict": null,
+  "sql": "SELECT p.portfolio_name FROM portfolios p JOIN holdings h ON p.portfolio_id = h.portfolio_id JOIN securities s ON h.security_id = s.security_id WHERE s.symbol = 'NVDA'",
+  "columns": [
+   "portfolio_name"
+  ],
+  "rows": [
+   [
+    "Growth Equity Fund"
+   ],
+   [
+    "Tech Innovation Fund"
+   ],
+   [
+    "Emerging Markets Fund"
+   ],
+   [
+    "Total Stock Market Index Fund"
+   ],
+   [
+    "Total International Index Fund"
+   ]
+  ],
+  "requests": 2,
+  "attempts": 1,
+  "run": "independent-test-20261109-133452"
+ }
+]

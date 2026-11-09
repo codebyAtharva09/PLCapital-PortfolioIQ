@@ -1,0 +1,114 @@
+{
+  "summary": {
+    "questions": 5,
+    "verdicts": {
+      "PASS": 5,
+      "FAIL": 0,
+      "NOT EVALUATED": 0
+    },
+    "consistency_rate": 1.0,
+    "api_requests": 30
+  },
+  "items": [
+    {
+      "id": "Q4",
+      "question": "What is the total Assets Under Management (AUM) for portfolios with high target risk level?",
+      "verdict": "PASS",
+      "explanation": "All 3 rounds produced the same route and result.",
+      "rounds": 3,
+      "evaluated": 3,
+      "api_failures": 0,
+      "consistency": 1.0,
+      "api_requests": 7,
+      "tokens": 10732,
+      "runs": [
+        "stability-20261107-204717",
+        "stability-20261107-204903",
+        "stability-20261107-205102"
+      ],
+      "models": [
+        "gemini-3.5-flash-lite"
+      ]
+    },
+    {
+      "id": "Q7",
+      "question": "For each portfolio, show the total value of Technology sector holdings and what percentage it represents of the total portfolio value",
+      "verdict": "PASS",
+      "explanation": "All 3 rounds produced the same route and result.",
+      "rounds": 3,
+      "evaluated": 3,
+      "api_failures": 0,
+      "consistency": 1.0,
+      "api_requests": 6,
+      "tokens": 11170,
+      "runs": [
+        "stability-20261107-204717",
+        "stability-20261107-204903",
+        "stability-20261107-205102"
+      ],
+      "models": [
+        "gemini-3.5-flash-lite"
+      ]
+    },
+    {
+      "id": "Q10",
+      "question": "Calculate the sector exposure breakdown for international equity",
+      "verdict": "PASS",
+      "explanation": "All 3 rounds produced the same route and result.",
+      "rounds": 3,
+      "evaluated": 3,
+      "api_failures": 0,
+      "consistency": 1.0,
+      "api_requests": 3,
+      "tokens": 2375,
+      "runs": [
+        "stability-20261107-204717",
+        "stability-20261107-204903",
+        "stability-20261107-205102"
+      ],
+      "models": [
+        "gemini-3.5-flash-lite"
+      ]
+    },
+    {
+      "id": "R01",
+      "question": "Which high-risk portfolio has the largest Technology exposure?",
+      "verdict": "PASS",
+      "explanation": "All 3 rounds produced the same route and result.",
+      "rounds": 3,
+      "evaluated": 3,
+      "api_failures": 0,
+      "consistency": 1.0,
+      "api_requests": 7,
+      "tokens": 10683,
+      "runs": [
+        "stability-20261107-204717",
+        "stability-20261107-204903",
+        "stability-20261107-205102"
+      ],
+      "models": [
+        "gemini-3.5-flash-lite"
+      ]
+    },
+    {
+      "id": "R09",
+      "question": "Which portfolios hold NVIDIA?",
+      "verdict": "PASS",
+      "explanation": "All 3 rounds produced the same route and result.",
+      "rounds": 3,
+      "evaluated": 3,
+      "api_failures": 0,
+      "consistency": 1.0,
+      "api_requests": 7,
+      "tokens": 10701,
+      "runs": [
+        "stability-20261107-204717",
+        "stability-20261107-204903",
+        "stability-20261107-205102"
+      ],
+      "models": [
+        "gemini-3.5-flash-lite"
+      ]
+    }
+  ]
+}

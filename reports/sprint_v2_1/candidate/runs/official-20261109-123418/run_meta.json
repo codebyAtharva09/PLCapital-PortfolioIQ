@@ -1,0 +1,30 @@
+{
+  "started_utc": "2026-11-09T07:04:19+00:00",
+  "model": "gemini-3.6-flash",
+  "thinking_level": "LOW",
+  "min_interval_s": 13.0,
+  "request_cap": 8,
+  "context_version": "31fdf60fa2b5",
+  "sql_prompt_version": "5219dec6dd3e",
+  "sql_prompt_variant": "candidate-2.1",
+  "router_version": "676786d09950",
+  "db_sha256_before": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857",
+  "skipped": [
+    "Q5",
+    "Q7"
+  ],
+  "attempted": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "Q6",
+    "Q8",
+    "Q9",
+    "Q10"
+  ],
+  "stopped": null,
+  "finished_utc": "2026-11-09T07:05:30+00:00",
+  "requests_sent": 6,
+  "db_sha256_after": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857"
+}

@@ -1,0 +1,397 @@
+{
+  "label": "candidate 2.3",
+  "note": "Supplemental diagnosis only. The official score comes from comparator.py and is not changed by this.",
+  "exact_shape": 18,
+  "semantic": 18,
+  "evaluated": 18,
+  "items": [
+    {
+      "id": "Q1",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "COUNT(*)": "values"
+      }
+    },
+    {
+      "id": "Q2",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 10,
+        "result": 10
+      },
+      "alignment": {
+        "portfolio_name": "name"
+      }
+    },
+    {
+      "id": "Q3",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 8,
+        "result": 8
+      },
+      "alignment": {
+        "symbol": "name",
+        "company_name": "name"
+      }
+    },
+    {
+      "id": "Q4",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "SUM(total_aum)": "name words"
+      }
+    },
+    {
+      "id": "Q5",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 5,
+        "result": 5
+      },
+      "alignment": {
+        "holding_id": "name",
+        "symbol": "name",
+        "company_name": "name",
+        "quantity": "name",
+        "cost_basis": "name"
+      }
+    },
+    {
+      "id": "Q6",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 7,
+        "result": 7
+      },
+      "alignment": {
+        "sector_name": "name",
+        "avg_price": "name words"
+      }
+    },
+    {
+      "id": "Q7",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 8,
+        "result": 8
+      },
+      "alignment": {
+        "portfolio_name": "name",
+        "tech_value": "name words",
+        "total_value": "name words",
+        "tech_percentage": "name"
+      }
+    },
+    {
+      "id": "Q8",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "portfolio_name": "name",
+        "sector_count": "values",
+        "total_holdings": "name",
+        "diversification_ratio": "name"
+      }
+    },
+    {
+      "id": "U1",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 5,
+        "result": 5
+      },
+      "alignment": {
+        "portfolio_name": "name"
+      }
+    },
+    {
+      "id": "U2",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "COUNT(*)": "name words"
+      }
+    },
+    {
+      "id": "U3",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "SUM(h.quantity * s.current_price)": "values"
+      }
+    },
+    {
+      "id": "U4",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 5,
+        "result": 5
+      },
+      "alignment": {
+        "symbol": "name",
+        "coupon_rate": "name",
+        "maturity_date": "name"
+      }
+    },
+    {
+      "id": "U5",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "beta": "name"
+      }
+    },
+    {
+      "id": "U6",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "COUNT(*)": "name words"
+      }
+    },
+    {
+      "id": "U7",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 9,
+        "result": 9
+      },
+      "alignment": {
+        "portfolio_name": "name"
+      }
+    },
+    {
+      "id": "U8",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "AVG(h.purchase_price)": "values"
+      }
+    },
+    {
+      "id": "U9",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "both results are empty",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [
+        "security_id",
+        "fees",
+        "settlement_date",
+        "notes"
+      ],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 0,
+        "result": 0
+      },
+      "alignment": {
+        "transaction_id": "name",
+        "portfolio_id": "values",
+        "security_id": null,
+        "transaction_type": "name",
+        "quantity": "name",
+        "price": "name",
+        "transaction_date": "name",
+        "fees": null,
+        "settlement_date": null,
+        "notes": null
+      }
+    },
+    {
+      "id": "U10",
+      "official_strict": true,
+      "official_relaxed": true,
+      "official_reason": "match",
+      "category": "exact_shape_match",
+      "semantic_match": true,
+      "missing_columns": [],
+      "extra_columns": [],
+      "duplicate_columns": [],
+      "wrong_value_columns": [],
+      "ordering_mismatch": false,
+      "rows": {
+        "reference": 1,
+        "result": 1
+      },
+      "alignment": {
+        "sector_name": "name"
+      }
+    }
+  ]
+}

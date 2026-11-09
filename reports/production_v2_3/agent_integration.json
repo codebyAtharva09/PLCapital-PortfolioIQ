@@ -1,0 +1,219 @@
+{
+  "summary": {
+    "as_expected": 4,
+    "unexpected": 0,
+    "evaluated": 4,
+    "total": 4,
+    "verdicts": {
+      "PASS": 4,
+      "FAIL": 0,
+      "REFUSED": 0,
+      "NOT EVALUATED": 0
+    },
+    "api_errors": 0,
+    "api_requests": 1,
+    "cache_hits": 5,
+    "latency_ms": {
+      "total": {
+        "count": 4,
+        "unavailable": 0,
+        "min_ms": 3.167,
+        "median_ms": 37.911,
+        "mean_ms": 1576.667,
+        "p95_ms": null,
+        "max_ms": 6227.681
+      },
+      "gemini_requests": {
+        "count": 1,
+        "unavailable": 0,
+        "min_ms": 6146.957,
+        "median_ms": 6146.957,
+        "mean_ms": 6146.957,
+        "p95_ms": null,
+        "max_ms": 6146.957
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "A1",
+      "question": "How many holdings does the Dividend Aristocrats Fund have?",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (sql, answered). holding_count: 4.",
+      "run": "agent-20261109-131006",
+      "route": "sql",
+      "status": "answered",
+      "answer": "holding_count: 4.",
+      "verification": "RESULT_VALIDATED",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": "314e91c11435",
+      "api_requests": 0,
+      "cache_hits": 2,
+      "latency_schema": 2,
+      "total_latency_ms": 66.18,
+      "llm_latency_ms": null,
+      "planner_latency_ms": null,
+      "sql_generation_latency_ms": null,
+      "sql_execution_latency_ms": 0.233,
+      "exposure_calculation_latency_ms": null,
+      "orchestration_latency_ms": 28.099,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "thinking_tokens": 0,
+      "total_tokens": 0,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "3539e88fcbf2e8fc",
+          "source": "cache"
+        },
+        {
+          "step": 2,
+          "tool": "sql_query",
+          "request_hash": "b78e3af9d72c530c",
+          "source": "cache"
+        }
+      ],
+      "raw_response": "reports/production_v2_3/api_usage.jsonl: step 1 router 3539e88fcbf2e8fc (cache), step 2 sql_query b78e3af9d72c530c (cache)",
+      "receipt_id": "2db69ad921a64f1b8aeff4090f421bdb"
+    },
+    {
+      "id": "A2",
+      "question": "What are the sector exposures for the Tech Innovation Fund?",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure, answered). Tech Innovation Fund: 1 sector(s) across an eligible stock weight of 100.00% of the portfolio. Largest sector: Technology, 100.00% of the portfolio (Method A) and 100.00% of the equity sleeve (Method B).",
+      "run": "agent-20261109-131006",
+      "route": "exposure",
+      "status": "answered",
+      "answer": "Tech Innovation Fund: 1 sector(s) across an eligible stock weight of 100.00% of the portfolio. Largest sector: Technology, 100.00% of the portfolio (Method A) and 100.00% of the equity sleeve (Method B).",
+      "verification": "INDEPENDENTLY_RECONCILED",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": null,
+      "api_requests": 0,
+      "cache_hits": 1,
+      "latency_schema": 2,
+      "total_latency_ms": 3.167,
+      "llm_latency_ms": null,
+      "planner_latency_ms": null,
+      "sql_generation_latency_ms": null,
+      "sql_execution_latency_ms": null,
+      "exposure_calculation_latency_ms": 1.061,
+      "orchestration_latency_ms": 2.105,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "thinking_tokens": 0,
+      "total_tokens": 0,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "ff131f2ad49d4a6c",
+          "source": "cache"
+        }
+      ],
+      "raw_response": "reports/production_v2_3/api_usage.jsonl: step 1 router ff131f2ad49d4a6c (cache)",
+      "receipt_id": "7bcaa266a012417297d4defa3cfd4c64"
+    },
+    {
+      "id": "A3",
+      "question": "Sector exposure for the international portfolio",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure, needs_clarification). 'international portfolio' is a generic description, so it cannot select a portfolio on its own. Which portfolio do you mean?",
+      "run": "agent-20261109-131006",
+      "route": "exposure",
+      "status": "needs_clarification",
+      "answer": "'international portfolio' is a generic description, so it cannot select a portfolio on its own. Which portfolio do you mean?",
+      "verification": "VERIFICATION_UNAVAILABLE",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": null,
+      "api_requests": 0,
+      "cache_hits": 1,
+      "latency_schema": 2,
+      "total_latency_ms": 9.641,
+      "llm_latency_ms": null,
+      "planner_latency_ms": null,
+      "sql_generation_latency_ms": null,
+      "sql_execution_latency_ms": null,
+      "exposure_calculation_latency_ms": null,
+      "orchestration_latency_ms": 9.641,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "thinking_tokens": 0,
+      "total_tokens": 0,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "92bb9fe58d84dbca",
+          "source": "cache"
+        }
+      ],
+      "raw_response": "reports/production_v2_3/api_usage.jsonl: step 1 router 92bb9fe58d84dbca (cache)",
+      "receipt_id": "fe2b6b96e46b400db0f55d138b7c04a0"
+    },
+    {
+      "id": "A4",
+      "question": "Which high-risk portfolio has the largest Technology exposure?",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure_for_sql_results, answered). The SQL step returned 4 portfolio(s): Growth Equity Fund, Tech Innovation Fund, Small Cap Value Fund, Emerging Markets Fund. Highest Technology exposure: Tech Innovation Fund, 100.00% of the portfolio (Method A) and 100.00% of its equity sleeve (Method B).",
+      "run": "agent-20261109-131006",
+      "route": "exposure_for_sql_results",
+      "status": "answered",
+      "answer": "The SQL step returned 4 portfolio(s): Growth Equity Fund, Tech Innovation Fund, Small Cap Value Fund, Emerging Markets Fund. Highest Technology exposure: Tech Innovation Fund, 100.00% of the portfolio (Method A) and 100.00% of its equity sleeve (Method B).",
+      "verification": "RESULT_VALIDATED",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": "314e91c11435",
+      "api_requests": 1,
+      "cache_hits": 1,
+      "latency_schema": 2,
+      "total_latency_ms": 6227.681,
+      "llm_latency_ms": 6146.957,
+      "planner_latency_ms": null,
+      "sql_generation_latency_ms": 6146.957,
+      "sql_execution_latency_ms": 2.012,
+      "exposure_calculation_latency_ms": 40.681,
+      "orchestration_latency_ms": 19.62,
+      "prompt_tokens": 3515,
+      "output_tokens": 65,
+      "thinking_tokens": 131,
+      "total_tokens": 3711,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "f8039e753a1a5450",
+          "source": "cache"
+        },
+        {
+          "step": 2,
+          "tool": "sql_query",
+          "request_hash": "468dcebc8dc48dc4",
+          "source": "api"
+        }
+      ],
+      "raw_response": "reports/production_v2_3/api_usage.jsonl: step 1 router f8039e753a1a5450 (cache), step 2 sql_query 468dcebc8dc48dc4 (api)",
+      "receipt_id": "1ce89d2569f54be3860a402b248c973b"
+    }
+  ]
+}

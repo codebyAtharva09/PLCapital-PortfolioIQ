@@ -1,0 +1,19 @@
+{
+  "started_utc": "2026-11-07T12:41:58+00:00",
+  "model": "gemini-3.6-flash",
+  "thinking_level": "LOW",
+  "min_interval_s": 13.0,
+  "request_cap": 5,
+  "context_version": "4b74dcd0419a",
+  "sql_prompt_version": "d5a914eb71d5",
+  "router_version": "676786d09950",
+  "db_sha256_before": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857",
+  "skipped": [],
+  "attempted": [
+    "A4"
+  ],
+  "stopped": null,
+  "finished_utc": "2026-11-07T12:42:27+00:00",
+  "requests_sent": 3,
+  "db_sha256_after": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857"
+}

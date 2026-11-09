@@ -1,0 +1,34 @@
+{
+  "started_utc": "2026-11-09T07:24:35+00:00",
+  "model": "gemini-3.6-flash",
+  "thinking_level": "LOW",
+  "min_interval_s": 13.0,
+  "request_cap": 4,
+  "context_version": "d5f1098033f7",
+  "prompt_version": "314e91c11435",
+  "prompt_variant": "candidate-2.3",
+  "db_sha256_before": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857",
+  "skipped": [],
+  "attempted": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "Q5",
+    "Q6",
+    "Q7",
+    "Q8",
+    "U4",
+    "U5",
+    "U9",
+    "U10"
+  ],
+  "stopped": {
+    "case": "U10",
+    "kind": "budget_exhausted",
+    "message": "The request budget is used up: 4 of 4 API requests sent, so no further request was sent."
+  },
+  "finished_utc": "2026-11-09T07:25:39+00:00",
+  "requests_sent": 4,
+  "db_sha256_after": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857"
+}

@@ -1,0 +1,175 @@
+{
+  "summary": {
+    "as_expected": 4,
+    "unexpected": 0,
+    "evaluated": 4,
+    "total": 4,
+    "verdicts": {
+      "PASS": 4,
+      "FAIL": 0,
+      "REFUSED": 0,
+      "NOT EVALUATED": 0
+    },
+    "api_errors": 0,
+    "api_requests": 6,
+    "cache_hits": 2
+  },
+  "items": [
+    {
+      "id": "A1",
+      "question": "How many holdings does the Dividend Aristocrats Fund have?",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (sql, answered). holding_count: 4.",
+      "run": "agent-20261107-181258",
+      "route": "sql",
+      "status": "answered",
+      "answer": "holding_count: 4.",
+      "verification": "RESULT_VALIDATED",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": "d5a914eb71d5",
+      "api_requests": 1,
+      "cache_hits": 1,
+      "llm_ms": 3117.4,
+      "total_ms": 3144.9,
+      "prompt_tokens": 715,
+      "output_tokens": 86,
+      "thinking_tokens": 0,
+      "total_tokens": 801,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "3539e88fcbf2e8fc",
+          "source": "api"
+        },
+        {
+          "step": 2,
+          "tool": "sql_query",
+          "request_hash": "b1b494be5881cee1",
+          "source": "cache"
+        }
+      ],
+      "raw_response": "reports/api_usage.jsonl: step 1 router 3539e88fcbf2e8fc (api), step 2 sql_query b1b494be5881cee1 (cache)",
+      "receipt_id": "cdf2f9152f2f40248ec2fb26e0f493a2"
+    },
+    {
+      "id": "A2",
+      "question": "What are the sector exposures for the Tech Innovation Fund?",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure, answered). Tech Innovation Fund: 1 sector(s) across an eligible stock weight of 100.00% of the portfolio. Largest sector: Technology, 100.00% of the portfolio (Method A) and 100.00% of the equity sleeve (Method B).",
+      "run": "agent-20261108-135856",
+      "route": "exposure",
+      "status": "answered",
+      "answer": "Tech Innovation Fund: 1 sector(s) across an eligible stock weight of 100.00% of the portfolio. Largest sector: Technology, 100.00% of the portfolio (Method A) and 100.00% of the equity sleeve (Method B).",
+      "verification": "INDEPENDENTLY_RECONCILED",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": null,
+      "api_requests": 0,
+      "cache_hits": 1,
+      "llm_ms": 0.0,
+      "total_ms": 25.2,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "thinking_tokens": 0,
+      "total_tokens": 0,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "ff131f2ad49d4a6c",
+          "source": "cache"
+        }
+      ],
+      "raw_response": "reports/api_usage.jsonl: step 1 router ff131f2ad49d4a6c (cache)",
+      "receipt_id": "d9593852cf3246ee94f864ca0188f0bc"
+    },
+    {
+      "id": "A3",
+      "question": "Sector exposure for the international portfolio",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure, needs_clarification). 'international portfolio' is a generic description, so it cannot select a portfolio on its own. Which portfolio do you mean?",
+      "run": "agent-20261108-135856",
+      "route": "exposure",
+      "status": "needs_clarification",
+      "answer": "'international portfolio' is a generic description, so it cannot select a portfolio on its own. Which portfolio do you mean?",
+      "verification": "VERIFICATION_UNAVAILABLE",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": null,
+      "api_requests": 2,
+      "cache_hits": 0,
+      "llm_ms": 1560.3,
+      "total_ms": 14574.3,
+      "prompt_tokens": 710,
+      "output_tokens": 80,
+      "thinking_tokens": 0,
+      "total_tokens": 790,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "92bb9fe58d84dbca",
+          "source": "api"
+        }
+      ],
+      "raw_response": "reports/api_usage.jsonl: step 1 router 92bb9fe58d84dbca (api)",
+      "receipt_id": "176fee88d37b4d72844e29eeb633710f"
+    },
+    {
+      "id": "A4",
+      "question": "Which high-risk portfolio has the largest Technology exposure?",
+      "outcome": "as_expected",
+      "verdict": "PASS",
+      "problems": [],
+      "explanation": "Behaved as expected (exposure_for_sql_results, answered). The SQL step returned 4 portfolio(s): Growth Equity Fund, Tech Innovation Fund, Small Cap Value Fund, Emerging Markets Fund. Highest Technology exposure: Tech Innovation Fund, 100.00% of the portfolio (Method A) and 100.00% of its equity sleeve (Method B).",
+      "run": "agent-20261107-181157",
+      "route": "exposure_for_sql_results",
+      "status": "answered",
+      "answer": "The SQL step returned 4 portfolio(s): Growth Equity Fund, Tech Innovation Fund, Small Cap Value Fund, Emerging Markets Fund. Highest Technology exposure: Tech Innovation Fund, 100.00% of the portfolio (Method A) and 100.00% of its equity sleeve (Method B).",
+      "verification": "RESULT_VALIDATED",
+      "api_error": null,
+      "model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "router_version": "676786d09950",
+      "sql_prompt_version": "d5a914eb71d5",
+      "api_requests": 3,
+      "cache_hits": 0,
+      "llm_ms": 8014.6,
+      "total_ms": 29019.4,
+      "prompt_tokens": 3402,
+      "output_tokens": 164,
+      "thinking_tokens": 0,
+      "total_tokens": 3566,
+      "raw_responses": [
+        {
+          "step": 1,
+          "tool": "router",
+          "request_hash": "f8039e753a1a5450",
+          "source": "api"
+        },
+        {
+          "step": 2,
+          "tool": "sql_query",
+          "request_hash": "d0ca487aef121c12",
+          "source": "api"
+        }
+      ],
+      "raw_response": "reports/api_usage.jsonl: step 1 router f8039e753a1a5450 (api), step 2 sql_query d0ca487aef121c12 (api)",
+      "receipt_id": "13919fc73df34f9d979dd2c225acad9e"
+    }
+  ]
+}
