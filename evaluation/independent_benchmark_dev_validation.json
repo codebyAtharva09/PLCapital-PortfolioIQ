@@ -1,5 +1,5 @@
 {
-  "description": "Independent reliability benchmark (see reports/claude_audit/independent_benchmark_design.md). Every expected value was computed straight from the supplied CSV files by benchmark_oracles.py, and equals the reference SQL result. Never read by runtime code; never copied into any prompt.",
+  "description": "Independent reliability benchmark (see reports/independent_benchmark_design.md). Every expected value was computed straight from the supplied CSV files by benchmark_oracles.py, and equals the reference SQL result. Never read by runtime code; never copied into any prompt.",
   "frozen": "2026-11-08",
   "cases": [
     {

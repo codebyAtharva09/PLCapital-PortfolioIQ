@@ -2,7 +2,7 @@
 
 Official Q1-Q10 through the agent, live, on the final code: **PASS 10**, routing 10 of 10.
 
-- Code commit: `e52573335b0e92daef369d915f3983f5eaa4d653`. Files in `src/`, `evaluation/` and `data/` are unchanged since that commit.
+- Code commit: `e52573335b0e92daef369d915f3983f5eaa4d653`. The files in `src/` and `data/` and the official ground truth are unchanged since that commit.
 - Configuration: `candidate-2.3`, SQL prompt `314e91c11435`, router `676786d09950`, model `gemini-3.6-flash`, thinking LOW, response cache off.
 - Configuration manifest: `reports/final_verification/eval_config_20261109T200056Z.json`.
 - Time: 2026-11-09, 20:00 to 20:25 UTC.
