@@ -79,7 +79,7 @@ Command: `python -m portfolioiq_eval agent --rescore`. Report: `reports/agent_in
 
 ## 3. Official questions (M5): Q1-Q10 on three layers
 
-Command: `python -m portfolioiq_eval official --rescore`. Report: `reports/official_evaluation.{md,json}`.
+Baseline report: `reports/sprint_v2_1/baseline/official_evaluation.{md,json}`. `reports/official_evaluation.{md,json}` now shows the active configuration.
 
 | Layer | What it measures | Result |
 |---|---|---|
