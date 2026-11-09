@@ -16,12 +16,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 from portfolioiq.config import PROJECT_ROOT, load_settings
 from portfolioiq_eval import agent_eval, benchmark, independent, official, semantic_compare, sql_eval, stability, usage
 
 REPORTS = PROJECT_ROOT / "reports"
+RESCORE_RECORDED = ("python -m portfolioiq_eval official --rescore --runs-dir reports/sprint_v2_3/candidate/runs "
+                    "--reports-dir reports/rescore")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -248,8 +251,19 @@ def _official(args, settings) -> int:
               f"({s['total']} questions). No request was sent.")
         return 0 if s["identical"] == s["compared"] else 1
     sql_outputs = sql_eval.recorded_outputs(args.runs_dir)
-    reason = mixed_models(existing + sql_outputs, None if args.rescore else settings.gemini_model,
-                          None if args.rescore else live_prompt_version(settings))
+    model, prompt = (None, None) if args.rescore else (settings.gemini_model, live_prompt_version(settings))
+    reason = mixed_models(existing + sql_outputs, model, prompt)
+    if reason and not args.rescore and args.runs_dir == REPORTS / "runs" and args.reports_dir == REPORTS:
+        # A plain live run, and the default folders hold another configuration's evidence (the baseline's, on a fresh
+        # clone). That evidence stays as it is, so the run gets a folder of its own for this model and prompt version.
+        if not settings.gemini_api_key:
+            return _refuse("GEMINI_API_KEY is not set, so the agent cannot be run live. To score the recorded live run "
+                           f"without a key: {RESCORE_RECORDED}")
+        args.reports_dir = REPORTS / "live" / re.sub(r"[^\w.-]+", "-", f"{model}-{prompt}")
+        args.runs_dir = args.reports_dir / "runs"
+        print(f"The default folders hold runs from another configuration, so this run is kept in {args.reports_dir}")
+        existing, sql_outputs = official.recorded_outputs(args.runs_dir), sql_eval.recorded_outputs(args.runs_dir)
+        reason = mixed_models(existing + sql_outputs, model, prompt)
     if reason:
         return _refuse(reason)
     if not args.rescore:

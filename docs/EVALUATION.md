@@ -177,11 +177,12 @@ year relative to the data anchor; see the supplemental SQL report).
 
 ## Running a further live evaluation
 
-A live run needs a Gemini key and quota, and must use its own folders, because runs from different models or SQL prompt versions are never
-scored together:
+A live run needs a Gemini key and quota. Runs from different models or SQL prompt versions are never scored together, so when the default
+folders hold another configuration's runs, as they do on a fresh clone, the run is kept in `reports/live/<model>-<prompt version>/`.
+Pass `--runs-dir` and `--reports-dir` to choose other folders.
 
 ```bash
-python -m portfolioiq_eval official --max-requests 18 --runs-dir reports/<new>/runs --reports-dir reports/<new>
+python -m portfolioiq_eval official --max-requests 18
 ```
 
 Each run records its answers as they arrive, so an interrupted run loses nothing, and no case is asked twice unless `--rerun` names it.
