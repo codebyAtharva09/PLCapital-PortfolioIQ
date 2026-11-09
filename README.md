@@ -56,57 +56,7 @@ Set the key with `$env:GEMINI_API_KEY = "<your key>"` (PowerShell) or `export GE
 
 ## How it works
 
-```mermaid
-%%{init: {"flowchart": {"wrappingWidth": 460}}}%%
-flowchart TD
-    USER["<b>User / Reviewer</b><br/>CLI, Streamlit app or evaluators"]
-    IFACE{"Interface<br/>Layer"}
-    AGENT["<b>PortfolioAgent (agent.py)</b><br/>Validates input; one route;<br/>at most 3 Gemini calls a question"]
-    ROUTER["<b>Gemini Router (router.py, llm.py)</b><br/>gemini-3.6-flash, thinking LOW<br/>RouterDecision: validated, no numeric field"]
-    DEMO["<b>Demo mode (replay.py)</b><br/>Exact recorded responses; sends nothing"]
-    ERROR["<b>Typed error</b><br/>Quota or API failure;<br/>no invented answer"]
-    SQL["<b>SQL Query Tool (sql_tool.py)</b><br/>Semantic context from the schema;<br/>Gemini drafts one SELECT; one repair"]
-    GUARD["<b>SQL Guard (sql_guard.py)</b><br/>SQLGlot AST: one statement; allow-listed<br/>tables, columns and functions"]
-    RESOLVER["<b>Portfolio Resolver (resolver.py)</b><br/>Fixed rules; parameterised queries;<br/>SQL syntax is rejected"]
-    EXPOSURE["<b>Exposure Engine (exposure.py)</b><br/>Methods A and B on two paths,<br/>reconciled within 1e-9; bonds excluded"]
-    CLARIFY["<b>Clarify or decline</b><br/>Reply with no tool run"]
-    DB[("<b>SQLite database (rebuilt from the supplied CSVs)</b><br/>URI mode=ro + PRAGMA query_only + authorizer<br/>2,000 ms, 50M VM steps, 500 rows, 2 MB, SQLite limits<br/>One execution path for generated SQL")]
-    CHECKS["<b>Checks and independent verification</b><br/>Result checks and result-shape policy (sql_policy.py)<br/>Independent verification: figures rebuilt in Python from source records<br/>States: validated, reconciled, not verifiable, or verification failed"]
-    COMPOSER["<b>Answer Composer (agent.py)</b><br/>Code writes every figure;<br/>Gemini never sees query results"]
-    RECEIPT["<b>Financial Answer Receipt (receipt.py)</b><br/>Route, SQL, figures, checks,<br/>verification state, versions, fingerprint"]
-    FINAL["<b>Final Response + Receipt</b><br/>CLI, Streamlit app, JSON download, evaluators"]
-
-    USER --> IFACE
-    IFACE -->|"CLI (cli.py)"| AGENT
-    IFACE -->|"Web UI (streamlit_app.py)"| AGENT
-    IFACE -->|"Evaluators (portfolioiq_eval)"| AGENT
-    IFACE -->|"No model needed"| DB
-    AGENT --> ROUTER
-    DEMO -.-> ROUTER
-    ROUTER -->|"429 / 503 / 504"| ERROR
-    ROUTER -->|"sql"| SQL
-    ROUTER -->|"exposure_for_sql_results (hybrid)"| SQL
-    ROUTER -->|"exposure"| RESOLVER
-    ROUTER -->|"clarify / decline"| CLARIFY
-    SQL --> GUARD
-    SQL -->|"portfolio names"| RESOLVER
-    RESOLVER --> EXPOSURE
-    GUARD -->|"read-only"| DB
-    EXPOSURE -->|"read-only"| DB
-    DB --> CHECKS
-    CHECKS --> COMPOSER
-    CLARIFY --> COMPOSER
-    ERROR --> COMPOSER
-    COMPOSER --> RECEIPT
-    RECEIPT --> FINAL
-
-    classDef app fill:#ECECFF,stroke:#7C5CD6,color:#2B2B3A
-    classDef control fill:#E6F5EC,stroke:#2E9E5B,color:#2B2B3A
-    classDef alt fill:#FFF4DF,stroke:#D9962B,color:#2B2B3A
-    class USER,IFACE,AGENT,ROUTER,SQL,GUARD,RESOLVER,EXPOSURE,CLARIFY,COMPOSER,RECEIPT,FINAL app
-    class DB,CHECKS control
-    class DEMO,ERROR alt
-```
+![PortfolioIQ architecture](docs/assets/architecture_overview.png)
 
 Only the router and the SQL draft call Gemini, and Gemini never receives query results. Exposure uses `holdings.current_weight`, excludes
 bonds, and reports each sector as a share of the whole portfolio and of the equity holdings.
