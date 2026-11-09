@@ -25,6 +25,8 @@ from views import ask, evaluation, exposure, methodology, overview, setup, sql_i
 
 st.set_page_config(page_title="PortfolioIQ", layout="wide", initial_sidebar_state="expanded")
 st.logo(str(APP_DIR / "static" / "wordmark.svg"), size="large")
+st.sidebar.image(str(APP_DIR / "static" / "pl_capital_logo.png"), width=200)
+st.sidebar.caption("Built for the PL Capital AI Engineer assessment")
 ui.inject_css()
 
 PAGES = {

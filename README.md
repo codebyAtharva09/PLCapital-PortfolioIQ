@@ -18,17 +18,31 @@ same backend.
 
 ## Contents
 
+- [Assignment coverage](#assignment-coverage)
 - [Quick start](#quick-start)
 - [Gemini API configuration](#gemini-api-configuration)
 - [Demonstration workflow](#demonstration-workflow)
 - [What it does](#what-it-does)
-- [Architecture](#architecture)
+- [Architecture & Overview](#architecture--overview)
 - [Financial methodology](#financial-methodology)
 - [Security design](#security-design)
 - [Evaluation results](#evaluation-results)
 - [Known limitations](#known-limitations)
 - [Command reference](#command-reference)
 - [Repository layout and documents](#repository-layout-and-documents)
+
+## Assignment coverage
+
+| Requirement | Implementation | Files |
+|---|---|---|
+| SQL Query Tool | Natural language to one validated, read-only `SELECT` | `src/portfolioiq/sql_tool.py`, `sql_guard.py`, `sql_engine.py`, `semantic.py` |
+| Exposure Calculator | Sector weights by two labelled methods, bonds excluded, computed twice and reconciled | `src/portfolioiq/exposure.py` |
+| Portfolio Agent (CLI) | Routes each question to a tool, or asks for clarification, or declines | `src/portfolioiq/agent.py`, `router.py`, `cli.py` |
+| Evaluator | Executed-result comparison against the supplied ground truth | `src/portfolioiq_eval/comparator.py`, `official.py`, `sql_eval.py` |
+| Documentation and error handling | This README, typed errors for quota, outage, invalid output and invalid SQL | `docs/`, `src/portfolioiq/llm.py` |
+| Optional UI | Streamlit application with seven pages | `app/` |
+
+**Technology.** Python 3.12 or later, SQLite, Google Gemini (`google-genai`), SQLGlot, Pydantic, Streamlit, pandas, pytest.
 
 ## Quick start
 
@@ -135,22 +149,76 @@ records, so nothing is claimed about it), `VERIFICATION_FAILED` (a check failed;
 `VERIFICATION_UNAVAILABLE` (nothing to verify, for example a refusal).
 Correctness against a reference answer is judged separately by the evaluators.
 
-## Architecture
+## Architecture & Overview
+
+PortfolioIQ separates what the model may decide from what code must do. Gemini chooses a route and drafts SQL. Python validates the
+query, runs it read-only, performs the calculations, checks the result and writes the answer. Gemini never receives query results.
 
 ```mermaid
-flowchart LR
-    Q[Question] --> V[Input validation] --> R[Router: one Gemini request, validated RouterDecision]
-    R -->|sql| S[SQL tool: semantic layer + Gemini draft] --> G[SQLGlot guard] --> DB[(Read-only SQLite + authorizer)]
-    R -->|exposure| P[Resolver B4, B5, SR1] --> E[Exposure engine, Methods A and B] --> DB
-    R -->|exposure_for_sql_results| S
-    S -->|portfolio names| P
-    R -->|clarify / decline| F
-    E --> F[Financial Answer Receipt: answer composed by code]
-    S --> F
-    F --> C[CLI]
-    F --> U[Streamlit]
-    F --> EV[Evaluators]
+%%{init: {"flowchart": {"wrappingWidth": 460}}}%%
+flowchart TD
+    USER["<b>User / Reviewer</b><br/>CLI, Streamlit app or evaluators"]
+    IFACE{"Interface<br/>Layer"}
+    AGENT["<b>PortfolioAgent (agent.py)</b><br/>Validates input; one route;<br/>at most 3 Gemini calls a question"]
+    ROUTER["<b>Gemini Router (router.py, llm.py)</b><br/>gemini-3.6-flash, thinking LOW<br/>RouterDecision: validated, no numeric field"]
+    DEMO["<b>Demo mode (replay.py)</b><br/>Exact recorded responses; sends nothing"]
+    ERROR["<b>Typed error</b><br/>Quota or API failure;<br/>no invented answer"]
+    SQL["<b>SQL Query Tool (sql_tool.py)</b><br/>Semantic context from the schema;<br/>Gemini drafts one SELECT; one repair"]
+    GUARD["<b>SQL Guard (sql_guard.py)</b><br/>SQLGlot AST: one statement; allow-listed<br/>tables, columns and functions"]
+    RESOLVER["<b>Portfolio Resolver (resolver.py)</b><br/>Fixed rules; parameterised queries;<br/>SQL syntax is rejected"]
+    EXPOSURE["<b>Exposure Engine (exposure.py)</b><br/>Methods A and B on two paths,<br/>reconciled within 1e-9; bonds excluded"]
+    CLARIFY["<b>Clarify or decline</b><br/>Reply with no tool run"]
+    DB[("<b>SQLite database (rebuilt from the supplied CSVs)</b><br/>URI mode=ro + PRAGMA query_only + authorizer<br/>2,000 ms, 50M VM steps, 500 rows, 2 MB, SQLite limits<br/>One execution path for generated SQL")]
+    CHECKS["<b>Checks and independent verification</b><br/>Result checks and result-shape policy (sql_policy.py)<br/>Independent verification: figures rebuilt in Python from source records<br/>States: validated, reconciled, not verifiable, or verification failed"]
+    COMPOSER["<b>Answer Composer (agent.py)</b><br/>Code writes every figure;<br/>Gemini never sees query results"]
+    RECEIPT["<b>Financial Answer Receipt (receipt.py)</b><br/>Route, SQL, figures, checks,<br/>verification state, versions, fingerprint"]
+    FINAL["<b>Final Response + Receipt</b><br/>CLI, Streamlit app, JSON download, evaluators"]
+
+    USER --> IFACE
+    IFACE -->|"CLI (cli.py)"| AGENT
+    IFACE -->|"Web UI (streamlit_app.py)"| AGENT
+    IFACE -->|"Evaluators (portfolioiq_eval)"| AGENT
+    IFACE -->|"No model needed"| DB
+    AGENT --> ROUTER
+    DEMO -.-> ROUTER
+    ROUTER -->|"429 / 503 / 504"| ERROR
+    ROUTER -->|"sql"| SQL
+    ROUTER -->|"exposure_for_sql_results (hybrid)"| SQL
+    ROUTER -->|"exposure"| RESOLVER
+    ROUTER -->|"clarify / decline"| CLARIFY
+    SQL --> GUARD
+    SQL -->|"portfolio names"| RESOLVER
+    RESOLVER --> EXPOSURE
+    GUARD -->|"read-only"| DB
+    EXPOSURE -->|"read-only"| DB
+    DB --> CHECKS
+    CHECKS --> COMPOSER
+    CLARIFY --> COMPOSER
+    ERROR --> COMPOSER
+    COMPOSER --> RECEIPT
+    RECEIPT --> FINAL
+
+    classDef app fill:#ECECFF,stroke:#7C5CD6,color:#2B2B3A
+    classDef control fill:#E6F5EC,stroke:#2E9E5B,color:#2B2B3A
+    classDef alt fill:#FFF4DF,stroke:#D9962B,color:#2B2B3A
+    class USER,IFACE,AGENT,ROUTER,SQL,GUARD,RESOLVER,EXPOSURE,CLARIFY,COMPOSER,RECEIPT,FINAL app
+    class DB,CHECKS control
+    class DEMO,ERROR alt
 ```
+
+Purple boxes are application components, green boxes are data and verification controls, and amber boxes are demo mode or the failure path. Only the router and the SQL draft call Gemini. Use the diagram's controls to zoom and pan.
+
+Following one question through the diagram:
+
+| Stage | What happens | Gemini? |
+|---|---|---|
+| **1. Interface** | The CLI, the Streamlit app and the evaluators call the same agent. Exposure Analysis and the data checks read the database directly | No |
+| **2. Agent and router** | The agent validates the input. One request returns a validated decision: `sql`, `exposure`, `exposure_for_sql_results`, `clarify` or `decline`. The decision has no numeric field, so no figure can travel from the model into an answer | Yes, routing |
+| **3. SQL path** | Gemini drafts one `SELECT` from a semantic description of the schema. The SQLGlot guard checks that exact text, then SQLite runs it read-only under an authorizer and time, step, row and size limits | Yes, the draft and at most one repair |
+| **4. Exposure path** | The resolver matches the portfolio by fixed rules. The engine calculates Methods A and B on two independent paths and requires them to agree within 1e-9 | No |
+| **5. Hybrid path** | `exposure_for_sql_results`: SQL finds the portfolios, and the exposure engine runs for each name returned | SQL draft only |
+| **6. Clarify, decline or failure** | No tool runs for a clarification or a decline. A quota or API failure becomes a typed error, and no answer is invented. Demo mode replays exact recorded responses and sends nothing | Routing only |
+| **7. Verification and answer** | Result checks run first, then figures are rebuilt in Python from source records where the data allows it. Code writes the answer, and the receipt records the route, SQL, figures, checks, verification state and versions | No |
 
 - **Runtime package** `src/portfolioiq/`: `agent.py`, `router.py`, `sql_tool.py`, `sql_guard.py`,
   `sql_engine.py`, `semantic.py`, `dates.py`, `exposure.py`, `resolver.py`, `invariants.py`,
@@ -255,6 +323,14 @@ python -m portfolioiq_eval official --rescore --runs-dir reports/sprint_v2_3/can
 python -m portfolioiq_eval benchmark                                          # 19 reliability scenarios
 python -m portfolioiq integrity                                               # 22 data checks
 ```
+
+### Test results
+
+The offline suite passed **910 tests, 0 failed** on this commit, run on 9 November 2026 with Python 3.13 on Windows. Run it with `pytest`; it needs no key and no network.
+
+It covers SQL safety, exposure and financial calculations, routing, the CLI, the Streamlit pages, receipts, replay and the evaluators, using fakes in place of Gemini. A passing suite shows the code behaves as its tests expect. It does not show that a live model answers correctly or that the calculations are right for questions no test asks. Only the Gemini evaluation results above needed live access.
+
+GitHub Actions runs the offline suite on Linux and Windows with Python 3.12, and makes no Gemini request.
 
 **Supplemental evaluation, `gemini-3.5-flash-lite` (not the official model).** Approved separately to
 reach the cases the official model's quota could not cover; kept in its own folder
