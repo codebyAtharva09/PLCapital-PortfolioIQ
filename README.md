@@ -11,7 +11,7 @@ same backend.
 
 > **Status.** The active SQL configuration is `candidate-2.3` (SQL prompt `314e91c11435`), on `gemini-3.6-flash`. Live on the unchanged official
 > evaluator it scored **10 of 10**, against **8 of 10** for the original baseline, which is kept and can be restored with
-> `PORTFOLIOIQ_SQL_PROMPT=baseline`. On a frozen held-out set it scored **16 of 16** in one run. These are small samples: see
+> `PORTFOLIOIQ_SQL_PROMPT=baseline`. On a frozen held-out set it scored **16 of 16** in one run. These live results predate the final security and verification changes. A fresh live run on the final code stopped on a Gemini quota error after 2 requests, so the final code has offline replay evidence only (10 of 10 receipts reproduced). These are small samples: see
 > [what the results mean](#what-the-results-mean).
 
 ![PortfolioIQ Overview](docs/assets/screenshots/01_overview_first_screen.png)
@@ -46,7 +46,7 @@ same backend.
 
 ## Quick start
 
-Requires Python 3.12 or later (tested on Python 3.12 and 3.13 on Windows 11; CI runs Python 3.12 on Linux and Windows).
+Requires Python 3.12 or later (tested on Python 3.12 and 3.13 on Windows 11; CI is configured for Python 3.12 and 3.13 on Linux and Windows).
 
 ```bash
 git clone https://github.com/codebyAtharva09/PLCapital-PortfolioIQ.git
@@ -139,7 +139,7 @@ With a key configured, switch Ask PortfolioIQ to **Live Gemini** (or use `python
 | **Financial Answer Receipt** | Route, tool calls, SQL, exposure figures, checks, verification state, caveats, model and SDK, requests, tokens, timings, data fingerprint, prompt versions | No |
 | **Financial Invariant Engine** | 22 database-wide checks (PASS / WARNING / FAIL / N/A): checksums, foreign keys, weights, prices, AUM coverage, reconciliation, coverage, classification, dates | No |
 | **Evaluators** | SQL execution accuracy (strict and relaxed), agent integration, official Q1-Q10 on three layers, a 19-scenario reliability benchmark, API usage | Live runs only |
-| **Independent financial verification** | Rebuilds market value, AUM, cost basis, weights and percentages from source records in plain Python, and compares them with the SQL result. The generated SQL is never re-run to check itself | No |
+| **Independent financial verification** | Rebuilds market value, AUM, cost basis, weights, percentages, counts, averages, extremes and the diversification ratio from source records in plain Python, and compares them with the SQL result. A separate pandas reference recalculates the figures from the CSV files: 39 items, none failed ([report](docs/INDEPENDENT_FINANCIAL_VERIFICATION.md)). The generated SQL is never re-run to check itself | No |
 | **Streamlit app** | Seven pages: Overview, Ask PortfolioIQ, SQL Intelligence, Exposure Analysis, Evaluation & Evidence, Data & Methodology, CLI & Setup | Ask and SQL pages only, in Live mode |
 | **Demo mode** | Replays recorded Gemini responses offline, labelled **DEMO / FIXTURE MODE**; everything after the model output runs now | Never sends a request |
 
@@ -312,6 +312,7 @@ experiment folder. `reports/official_evaluation.*` and `reports/sql_evaluation.*
 - The held-out set saw no prompt tuning, and its 16 of 16 has a 95% Wilson interval of 80.6% to 100%. The result-shape policy's false-positive check had seen
   its reference queries, so it is slightly less clean as evidence for the policy.
 - Each configuration was run once, so repeatability is unmeasured.
+- The live scores belong to the code before the final hardening. The fresh official run on the final code was stopped by Gemini's daily quota, which is an infrastructure failure and says nothing about accuracy. See [its status](reports/final_verification/live_official/STATUS.md).
 - Candidate `v2.4` exists offline for latest-date and ratio projection issues. It has no live evaluation and is not active.
 
 Run the checks:
@@ -322,15 +323,16 @@ python -m portfolioiq_eval official --replay-check --runs-dir reports/sprint_v2_
 python -m portfolioiq_eval official --rescore --runs-dir reports/sprint_v2_3/candidate/runs --reports-dir reports/rescore
 python -m portfolioiq_eval benchmark                                          # 19 reliability scenarios
 python -m portfolioiq integrity                                               # 22 data checks
+python scripts/run_independent_verification.py                                # pandas reference against the CSV files
 ```
 
 ### Test results
 
-The offline suite passed **910 tests, 0 failed** on this commit, run on 9 November 2026 with Python 3.13 on Windows. Run it with `pytest`; it needs no key and no network.
+The offline suite passed **1,053 tests, 0 failed** on Python 3.12 and 3.13 on Windows, run on 9 November 2026. Run it with `pytest`; it needs no key and no network.
 
 It covers SQL safety, exposure and financial calculations, routing, the CLI, the Streamlit pages, receipts, replay and the evaluators, using fakes in place of Gemini. A passing suite shows the code behaves as its tests expect. It does not show that a live model answers correctly or that the calculations are right for questions no test asks. Only the Gemini evaluation results above needed live access.
 
-GitHub Actions runs the offline suite on Linux and Windows with Python 3.12, and makes no Gemini request.
+GitHub Actions runs the offline suite on Linux and Windows with Python 3.12 and 3.13, and makes no Gemini request.
 
 **Supplemental evaluation, `gemini-3.5-flash-lite` (not the official model).** Approved separately to
 reach the cases the official model's quota could not cover; kept in its own folder
@@ -348,6 +350,8 @@ Google's own counter; the 2026-11-06 run predates the usage ledger.
   false-positive check had seen its reference queries. Routing replayed saved responses in the candidate runs because the router did not change.
 - **Shape policy false positives.** The policy can flag a correct query, for example "at each" is not read as grouping and a
   percentage over a scalar subquery can be read as fixed. A flagged query gets one retry; if the retry is no better the first result is kept.
+- **Method B and unclassified stocks.** Frozen rule B2 excludes stocks with no sector from the Method B denominator. The supplied data has no such stock, so no figure depends on this.
+- **Q8 query.** The recorded production query does not limit distinct sectors to stocks. It is correct on this data because every bond has no sector, and the independent verifier would fail it otherwise.
 - **Latest-date questions.** The latest date is taken across the whole table, which is correct while every portfolio ends on the same date.
 - Demo mode answers only questions with recorded Gemini responses and labels every replay **DEMO / FIXTURE MODE**.
 - The supplied data has documented anomalies (warnings, not errors): Home Depot is classified as
@@ -404,5 +408,10 @@ docs/                 plan, rules, security, evaluation, demo, research, design,
 | [docs/EVALUATION.md](docs/EVALUATION.md) | Evaluation methodology and recorded results |
 | [docs/BUSINESS_RULES.md](docs/BUSINESS_RULES.md) | Frozen financial and resolution rules |
 | [docs/SECURITY.md](docs/SECURITY.md) | Security controls and their tests |
+| [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md) | Threat model, findings and remaining risks |
+| [docs/SECURITY_REGRESSION_REPORT.md](docs/SECURITY_REGRESSION_REPORT.md) | Security checks on the final code |
+| [docs/INDEPENDENT_FINANCIAL_VERIFICATION.md](docs/INDEPENDENT_FINANCIAL_VERIFICATION.md) | Independent reference, inventory and unverifiable figures |
+| [docs/INDEPENDENT_BENCHMARK_REPORT.md](docs/INDEPENDENT_BENCHMARK_REPORT.md) | Benchmark provenance and status |
+| [docs/FINAL_AUDIT_REPORT.md](docs/FINAL_AUDIT_REPORT.md) | Current state and limitations |
 | [docs/DATA_FINDINGS.md](docs/DATA_FINDINGS.md) | Generated facts about the supplied data |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Interface design rules |
