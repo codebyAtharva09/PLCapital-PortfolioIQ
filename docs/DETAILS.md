@@ -183,7 +183,7 @@ experiment folder. `reports/official_evaluation.*` and `reports/sql_evaluation.*
 - The held-out set saw no prompt tuning, and its 16 of 16 has a 95% Wilson interval of 80.6% to 100%. The result-shape policy's false-positive check had seen
   its reference queries, so it is slightly less clean as evidence for the policy.
 - Each configuration was run once, so repeatability is unmeasured.
-- The live scores belong to the code before the final hardening. The fresh official run on the final code was stopped by Gemini's daily quota, which is an infrastructure failure and says nothing about accuracy. See [its status](../reports/final_verification/live_official/STATUS.md).
+- The official Q1-Q10 result was repeated live on the final code and scored PASS 10 ([report](../reports/final_live/official_evaluation.md), [status](../reports/final_live/STATUS.md)). The other live scores on this page belong to the code before the final hardening.
 - Candidate `v2.4` exists offline for latest-date and ratio projection issues. It has no live evaluation and is not active.
 
 Run the checks:

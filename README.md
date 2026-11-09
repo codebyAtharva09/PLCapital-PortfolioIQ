@@ -5,9 +5,8 @@
 Gemini chooses the tool and drafts the SQL. Python runs the SQL read-only, calculates every figure and writes every answer.
 A command-line agent, an evaluator and an optional Streamlit app share the same backend.
 
-> **Status.** The active configuration (`candidate-2.3` on `gemini-3.6-flash`) scored **10 of 10** live on the official questions and
-> **16 of 16** on a frozen held-out set. Those live runs came before the final security and verification changes. A fresh live run on
-> the final code was stopped by Gemini's daily quota, so the final code has offline replay evidence only (10 of 10 receipts reproduced).
+> **Status.** On the final code, the active configuration (`candidate-2.3` on `gemini-3.6-flash`) scored **10 of 10** live on the official
+> questions through the agent ([report](reports/final_live/official_evaluation.md), [how it was run](reports/final_live/STATUS.md)).
 
 ![PortfolioIQ Overview](docs/assets/screenshots/01_overview_first_screen.png)
 
@@ -116,10 +115,10 @@ bonds, and reports each sector as a share of the whole portfolio and of the equi
 
 | Evaluation (live, `gemini-3.6-flash`) | Result |
 |---|---|
-| **Official Q1-Q10 through the agent** | **PASS 10** (the original configuration scored PASS 8, FAIL 2) |
-| SQL tool, 10 unseen questions, strict | PASS 10 |
-| SQL tool, 3 unsafe prompts | Refused 3 of 3 |
-| Frozen held-out benchmark, 16 cases | PASS 13, correctly refused 3 |
+| **Official Q1-Q10 through the agent, final code** | **PASS 10** (the original configuration scored PASS 8, FAIL 2) |
+| SQL tool, 10 unseen questions, strict, before the final hardening | PASS 10 |
+| SQL tool, 3 unsafe prompts, before the final hardening | Refused 3 of 3 |
+| Frozen held-out benchmark, 16 cases, before the final hardening | PASS 13, correctly refused 3 |
 
 The offline suite passes 1,057 tests, using fakes in place of Gemini. Reports are in [reports/](reports/), and each live run keeps its raw
 receipts.

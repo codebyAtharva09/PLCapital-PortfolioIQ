@@ -1,0 +1,29 @@
+{
+  "started_utc": "2026-11-09T20:19:03+00:00",
+  "model": "gemini-3.6-flash",
+  "thinking_level": "LOW",
+  "min_interval_s": 13.0,
+  "request_cap": 20,
+  "context_version": "d5f1098033f7",
+  "sql_prompt_version": "314e91c11435",
+  "sql_prompt_variant": "candidate-2.3",
+  "router_version": "676786d09950",
+  "db_sha256_before": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857",
+  "skipped": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+  ],
+  "attempted": [
+    "Q5"
+  ],
+  "stopped": {
+    "case": "Q5",
+    "kind": "2 consecutive unavailable errors",
+    "message": "Gemini API error 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later."
+  },
+  "finished_utc": "2026-11-09T20:19:34+00:00",
+  "requests_sent": 3,
+  "db_sha256_after": "7c60f4d80f5049a06796abe05a5d0cbf30e54453044d33153ed5aba4ef8a8857"
+}

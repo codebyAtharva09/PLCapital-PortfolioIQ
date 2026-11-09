@@ -1,0 +1,313 @@
+{
+  "summary": {
+    "agent": {
+      "PASS": 10,
+      "FAIL": 0,
+      "REFUSED": 0,
+      "NOT EVALUATED": 0,
+      "routing_correct": 10,
+      "routing_evaluated": 10,
+      "total": 10
+    },
+    "sql_tool": {
+      "PASS": 0,
+      "FAIL": 0,
+      "REFUSED": 0,
+      "NOT EVALUATED": 8
+    },
+    "calculation": {
+      "PASS": 2,
+      "FAIL": 0,
+      "REFUSED": 0,
+      "NOT EVALUATED": 0
+    }
+  },
+  "items": [
+    {
+      "id": "Q1",
+      "kind": "text2sql",
+      "question": "How many portfolios do we have in total?",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-013058",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "8b62d06d6fcb4e9a8d1db7d3ca18e040",
+        "api_requests": 2,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q2",
+      "kind": "text2sql",
+      "question": "What are the names of all active portfolios?",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-014047",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "8dac1fa6dcbd49f98cba60b1e78e3a3a",
+        "api_requests": 2,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q3",
+      "kind": "text2sql",
+      "question": "Which securities are in the Technology sector?",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-014047",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "e4c4606147be4045891d5170e59b375c",
+        "api_requests": 2,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q4",
+      "kind": "text2sql",
+      "question": "What is the total Assets Under Management (AUM) for portfolios with high target risk level?",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-014047",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "8932fb052fcb4c2e93842b57be9bec7e",
+        "api_requests": 2,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q5",
+      "kind": "text2sql",
+      "question": "Show me the top 5 holdings by cost basis in the Growth Equity Fund",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-015136",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "cc4b273476d547768c66e96b6646b9b4",
+        "api_requests": 3,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q6",
+      "kind": "text2sql",
+      "question": "What is the average current price of securities in each sector?",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-015136",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "2d016216d99841ed8c4b1045665fd412",
+        "api_requests": 4,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q7",
+      "kind": "text2sql",
+      "question": "For each portfolio, show the total value of Technology sector holdings and what percentage it represents of the total portfolio value",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-015136",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "bf35085f4ac94a9197b1a2216fd2eeb6",
+        "api_requests": 2,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q8",
+      "kind": "text2sql",
+      "question": "Find portfolios that have holdings in more than 5 different sectors and show their diversification metrics",
+      "expected_route": "sql",
+      "agent": {
+        "run": "official-20261110-015136",
+        "route": "sql",
+        "status": "answered",
+        "receipt_id": "cf74dabbc6114e18baa5a00e77b365da",
+        "api_requests": 2,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to SQL; the result matches the reference exactly."
+      },
+      "sql_tool": {
+        "verdict": "NOT EVALUATED",
+        "explanation": "Not evaluated: no live run has asked this question yet.",
+        "run": null,
+        "prompt_version": null,
+        "model": null
+      }
+    },
+    {
+      "id": "Q9",
+      "kind": "exposure_calculator",
+      "question": "What are the sector exposures for the Tech Innovation Fund?",
+      "expected_route": "exposure",
+      "agent": {
+        "run": "official-20261110-015136",
+        "route": "exposure",
+        "status": "answered",
+        "receipt_id": "d4f759a87b1a492ca0e00caa2343b4fb",
+        "api_requests": 1,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to the exposure calculator for Tech Innovation Fund; both methods match the fixture."
+      },
+      "calculation": {
+        "verdict": "PASS",
+        "explanation": "Method A and Method B match the hand-derived fixture (Technology 100.00% / 100.00%); engine verification INDEPENDENTLY_RECONCILED.",
+        "figures": "Technology 100.00% / 100.00%",
+        "verification": "INDEPENDENTLY_RECONCILED"
+      }
+    },
+    {
+      "id": "Q10",
+      "kind": "exposure_calculator",
+      "question": "Calculate the sector exposure breakdown for international equity",
+      "expected_route": "exposure",
+      "agent": {
+        "run": "official-20261110-015136",
+        "route": "exposure",
+        "status": "answered",
+        "receipt_id": "f04052bebfad44dea8305120987e7379",
+        "api_requests": 1,
+        "model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "router_version": "676786d09950",
+        "sql_prompt_version": "314e91c11435",
+        "context_version": "d5f1098033f7",
+        "route_correct": true,
+        "verdict": "PASS",
+        "explanation": "Routed to the exposure calculator for International Equity Fund; both methods match the fixture."
+      },
+      "calculation": {
+        "verdict": "PASS",
+        "explanation": "Method A and Method B match the hand-derived fixture (Energy 38.00% / 38.00%, Technology 36.00% / 36.00%, Automotive 15.00% / 15.00%, Consumer Staples 11.00% / 11.00%); engine verification INDEPENDENTLY_RECONCILED; phrase 'international equity' resolves to International Equity Fund by rule B5.1.",
+        "figures": "Energy 38.00% / 38.00%, Technology 36.00% / 36.00%, Automotive 15.00% / 15.00%, Consumer Staples 11.00% / 11.00%",
+        "verification": "INDEPENDENTLY_RECONCILED"
+      }
+    }
+  ],
+  "sources": {
+    "agent_runs": [
+      "official-20261110-013058",
+      "official-20261110-014047",
+      "official-20261110-015136"
+    ],
+    "sql_tool_runs": []
+  }
+}

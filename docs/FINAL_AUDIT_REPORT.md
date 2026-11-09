@@ -1,5 +1,7 @@
 # Final audit report
 
+> **Update, 10 November 2026.** The live official evaluation on the final code has since completed: PASS 10. See `reports/final_live/STATUS.md`. The sections below describe the state on 9 November.
+
 State on 9 November 2026. `main` holds the production release plus the README and logo updates. The security work is on the unmerged branch `security-financial-verification-sprint`. The verification work below is uncommitted on `final-verification-evaluation-sprint`.
 
 ## Priorities
