@@ -27,7 +27,7 @@ The database builds itself from `data/` on first use. A key is needed only for n
 | 4 | SQL Intelligence | Choose an example, then Generate and run | The SQL, each guard check, rows, query details |
 | 5 | Exposure Analysis | Choose Balanced Portfolio | Warnings first, then Method A 22.00% and Method B 61.11% Technology with denominators |
 | 6 | CLI & Setup | Read the commands and output | Real CLI output produced by the page |
-| 7 | Evaluation & Evidence | Open the tabs; in Test Suite & Controls, press Re-score | Active configuration PASS 10 reproduced offline; Original Baseline tab shows PASS 8, FAIL 2; candidate history, supplemental and security kept apart |
+| 7 | Evaluation & Evidence | Open the tabs; in Test Suite & Controls, press Re-score | Active configuration PASS 10 reproduced offline; Original Baseline tab shows the historical PASS 8, FAIL 2, which does not describe the final configuration; candidate history, supplemental and security kept apart |
 | 8 | Data & Methodology | Open Known limitations | Data limits, untested cases, model dependencies |
 
 The active SQL configuration is `candidate-2.3` (SQL prompt `314e91c11435`). `PORTFOLIOIQ_SQL_PROMPT=baseline` restores the original configuration. Held-out T01-T16 scored 16 of 16 in one run; the other 35 independent cases are NOT YET EVALUATED.

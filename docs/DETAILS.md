@@ -157,7 +157,11 @@ safety never depends on Gemini behaving.
 Methodology and per-case tables: [docs/EVALUATION.md](EVALUATION.md). Scoring runs from recorded answers and makes no API call. All results below are
 live runs on `gemini-3.6-flash`. Each configuration keeps its own folder, and scores are never combined.
 
-| Evaluation | Original baseline `d5a914eb71d5` | Active `candidate-2.3` `314e91c11435` |
+**Final code, commit `e525733`:** official Q1-Q10 through the agent PASS 10 ([report](../reports/final_live/official_evaluation.md)). Standalone direct SQL-tool Q1-Q8 on the final code: NOT EVALUATED. Repeatability: NOT MEASURED.
+
+The table below is historical. Its live runs were recorded before the final hardening.
+
+| Evaluation | Original baseline `d5a914eb71d5` (historical) | `candidate-2.3` `314e91c11435`, before the final hardening |
 |---|---|---|
 | **Official Q1-Q10 through the agent** (end to end) | **PASS 8, FAIL 2** (Q5, Q7) | **PASS 10** |
 | SQL Query Tool, official Q1-Q8 (strict) | PASS 6, FAIL 2 | PASS 8 |

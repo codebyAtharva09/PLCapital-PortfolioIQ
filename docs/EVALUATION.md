@@ -4,7 +4,9 @@ Every result on this page comes from a recorded run or a deterministic check. Re
 from those records with no API call; nothing is estimated. Cases without a live result are **NOT
 EVALUATED** and are never counted as wrong.
 
-**Active production configuration (9 November 2026): `candidate-2.3`, SQL prompt `314e91c11435`.** Live on
+**Final code.** Official Q1-Q10 through the agent, live on commit `e525733`: PASS 10 ([report](../reports/final_live/official_evaluation.md), [status](../reports/final_live/STATUS.md)). The standalone direct SQL-tool Q1-Q8 evaluation was not run on the final code and is NOT EVALUATED. Repeatability is NOT MEASURED.
+
+**Before the final hardening (9 November 2026): `candidate-2.3`, SQL prompt `314e91c11435`.** These figures are historical and were not rerun on the final code. Live on
 `gemini-3.6-flash` with the unchanged comparator and ground truth: official end to end PASS 10, SQL Q1-Q8 PASS 8, unseen U1-U10
 PASS 10 (strict), safety REFUSED 3, agent integration PASS 4. These rules were written from failures in these sets, so the
 result is not an independent estimate. On the frozen held-out split T01-T16 it scored 16 of 16 (`reports/heldout_v2_3/HELDOUT_RESULT.md`); the other 35 independent cases are NOT YET EVALUATED. Evidence:
@@ -79,7 +81,7 @@ Command: `python -m portfolioiq_eval agent --rescore`. Report: `reports/agent_in
 
 ## 3. Official questions (M5): Q1-Q10 on three layers
 
-Baseline report: `reports/sprint_v2_1/baseline/official_evaluation.{md,json}`. `reports/official_evaluation.{md,json}` now shows the active configuration.
+This section records the original baseline at that time; the final-code result is at the top of this page. Baseline report: `reports/sprint_v2_1/baseline/official_evaluation.{md,json}`. `reports/official_evaluation.{md,json}` now shows the active configuration.
 
 | Layer | What it measures | Result |
 |---|---|---|
